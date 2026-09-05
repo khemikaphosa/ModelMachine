@@ -1,51 +1,47 @@
-```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>KNN — How Does It Decide?</title>
+<title>KNN Interactive Visualization</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
-/* =========================================================
-   ROOT
-========================================================= */
-
 :root{
+    --bg:#f8f9ff;
+    --white:#ffffff;
 
-    --bg:#080b12;
-    --bg2:#0d111a;
-    --panel:#111722;
+    --text:#202640;
+    --muted:#7d86a3;
 
-    --white:#f4f6fb;
-    --text:#dce1eb;
-    --muted:#737c8d;
-    --muted2:#4d5666;
+    --blue:#7898ff;
+    --blue-dark:#5575e8;
+    --blue-soft:#e9efff;
 
-    --blue:#6d8cff;
-    --blue2:#9badff;
+    --pink:#f28cae;
+    --pink-dark:#df638c;
+    --pink-soft:#ffe8f0;
 
-    --pink:#ff7184;
-    --pink2:#ff9baa;
+    --purple:#9b8cf5;
+    --purple-soft:#eeeaff;
 
-    --yellow:#ffd76a;
+    --yellow:#ffd978;
+    --yellow-soft:#fff4cf;
 
-    --line:rgba(255,255,255,.09);
+    --line:#dce2f3;
 
     --shadow:
-        0 30px 100px rgba(0,0,0,.45);
+        0 25px 70px rgba(83,99,160,.12),
+        0 5px 20px rgba(83,99,160,.06);
 }
 
 *{
     box-sizing:border-box;
-    margin:0;
-    padding:0;
 }
 
 html{
@@ -53,1987 +49,1169 @@ html{
 }
 
 body{
-
-    background:var(--bg);
-
+    margin:0;
+    background:
+        radial-gradient(circle at 10% 0%, #edf1ff 0, transparent 28%),
+        radial-gradient(circle at 90% 20%, #fff0f5 0, transparent 25%),
+        var(--bg);
     color:var(--text);
-
-    font-family:"DM Sans",sans-serif;
-
-    overflow-x:hidden;
+    font-family:"Prompt",sans-serif;
 }
 
-
-/* =========================================================
-   BACKGROUND
-========================================================= */
+/* subtle background */
 
 body::before{
-
     content:"";
-
     position:fixed;
-
     inset:0;
-
     pointer-events:none;
-
-    z-index:-5;
+    opacity:.35;
 
     background-image:
-        linear-gradient(
-            rgba(255,255,255,.025) 1px,
-            transparent 1px
-        ),
-        linear-gradient(
-            90deg,
-            rgba(255,255,255,.025) 1px,
-            transparent 1px
-        );
+        linear-gradient(#dfe4f3 1px,transparent 1px),
+        linear-gradient(90deg,#dfe4f3 1px,transparent 1px);
 
-    background-size:70px 70px;
+    background-size:45px 45px;
 
-    mask-image:
-        linear-gradient(
-            to bottom,
-            black,
-            transparent 90%
-        );
+    mask-image:linear-gradient(
+        to bottom,
+        black,
+        transparent 80%
+    );
 }
 
-
-.glow-blue{
-
-    position:fixed;
-
-    width:500px;
-    height:500px;
-
-    border-radius:50%;
-
-    background:
-        rgba(67,96,220,.12);
-
-    filter:blur(120px);
-
-    top:-200px;
-    right:-150px;
-
-    pointer-events:none;
-
-    z-index:-4;
-}
-
-
-.glow-pink{
-
-    position:fixed;
-
-    width:400px;
-    height:400px;
-
-    border-radius:50%;
-
-    background:
-        rgba(230,70,100,.07);
-
-    filter:blur(110px);
-
-    bottom:0;
-    left:-180px;
-
-    pointer-events:none;
-
-    z-index:-4;
-}
-
-
-/* =========================================================
-   NAV
-========================================================= */
+/* NAV */
 
 nav{
+    position:relative;
+    z-index:10;
 
-    height:76px;
-
+    height:88px;
     padding:0 5vw;
 
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
 
-    border-bottom:1px solid var(--line);
+    border-bottom:1px solid rgba(190,198,225,.5);
 
-    backdrop-filter:blur(20px);
-
-    position:relative;
-
-    z-index:20;
+    background:rgba(255,255,255,.65);
+    backdrop-filter:blur(18px);
 }
 
-
-.brand{
-
+.logo{
     display:flex;
-
     align-items:center;
+    gap:16px;
+}
 
-    gap:12px;
+.logo-box{
+    width:40px;
+    height:40px;
 
-    font-family:"Space Mono",monospace;
+    display:grid;
+    place-items:center;
 
-    font-size:10px;
+    border-radius:12px;
 
+    background:
+        linear-gradient(135deg,#7797ff,#9b8cf5);
+
+    color:white;
+
+    font-weight:800;
+    font-size:18px;
+
+    box-shadow:
+        0 8px 20px rgba(100,123,230,.25);
+}
+
+.logo-text{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:13px;
+    font-weight:600;
     letter-spacing:.08em;
 }
 
-
-.brand-icon{
-
-    width:34px;
-    height:34px;
-
-    border-radius:11px;
-
-    border:1px solid rgba(109,140,255,.55);
-
-    color:var(--blue2);
-
-    display:grid;
-
-    place-items:center;
-
-    box-shadow:
-        0 0 30px rgba(109,140,255,.13);
+.logo-text span{
+    color:#a0a7bd;
+    margin-left:8px;
 }
 
-
-.nav-info{
-
+.nav-right{
     display:flex;
-
     align-items:center;
-
-    gap:25px;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:9px;
-
-    color:var(--muted);
+    gap:35px;
 }
 
+.nav-link{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:#8991aa;
+}
 
 .live{
-
     display:flex;
-
     align-items:center;
+    gap:8px;
 
-    gap:7px;
+    padding:10px 18px;
+
+    border:1px solid #dfe4f3;
+    border-radius:30px;
+
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;
 }
-
 
 .live-dot{
-
-    width:6px;
-    height:6px;
-
+    width:8px;
+    height:8px;
     border-radius:50%;
+    background:#52d9a0;
 
-    background:#63dfa1;
-
-    box-shadow:
-        0 0 12px #63dfa1;
+    box-shadow:0 0 12px #52d9a0;
 }
 
-
-/* =========================================================
-   HERO
-========================================================= */
+/* HERO */
 
 .hero{
+    position:relative;
 
-    min-height:calc(100vh - 76px);
+    max-width:1450px;
+    margin:auto;
 
-    padding:90px 7vw;
+    min-height:760px;
+
+    padding:105px 5vw 80px;
 
     display:grid;
-
-    grid-template-columns:
-        minmax(0,1.1fr)
-        minmax(350px,.9fr);
+    grid-template-columns:.82fr 1.18fr;
+    gap:55px;
 
     align-items:center;
-
-    gap:6vw;
-
-    position:relative;
 }
 
+/* decorative blobs */
 
-.hero-kicker{
+.blob{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(1px);
+    pointer-events:none;
+}
 
-    font-family:"Space Mono",monospace;
+.blob.one{
+    width:260px;
+    height:260px;
 
-    color:#606a7a;
+    background:#e9edff;
 
-    font-size:10px;
+    top:-90px;
+    left:-100px;
+}
 
+.blob.two{
+    width:190px;
+    height:190px;
+
+    background:#fff0f5;
+
+    bottom:10px;
+    right:25%;
+}
+
+/* LEFT */
+
+.kicker{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
     letter-spacing:.18em;
+    color:#9ba4bf;
 
-    margin-bottom:30px;
+    margin-bottom:25px;
 }
 
+h1{
+    margin:0;
 
-.hero h1{
+    font-size:clamp(72px,7.8vw,125px);
 
-    font-size:
-        clamp(70px,9.5vw,150px);
+    line-height:.82;
 
-    line-height:.79;
-
-    letter-spacing:-.095em;
+    letter-spacing:-.075em;
 
     font-weight:800;
 }
 
-
-.hero h1 span{
-
+h1 .accent{
     color:var(--blue);
-
-    text-shadow:
-        0 0 60px rgba(109,140,255,.2);
 }
 
+.description{
+    max-width:540px;
 
-.hero-description{
+    margin-top:35px;
 
-    max-width:500px;
+    color:#717b99;
 
-    margin-top:45px;
-
-    color:#7e8797;
-
-    font-size:17px;
-
-    line-height:1.8;
+    font-size:16px;
+    line-height:2;
 }
 
-
-.hero-description strong{
-
-    color:#edf0f6;
+.description strong{
+    color:#3e4664;
 }
 
-
-.hero-button{
+.buttons{
+    display:flex;
+    gap:14px;
 
     margin-top:30px;
+}
 
-    padding:15px 23px;
-
-    border-radius:12px;
-
-    border:1px solid rgba(255,255,255,.12);
-
-    background:rgba(255,255,255,.05);
-
-    color:#fff;
-
+button{
+    font-family:"Prompt",sans-serif;
     cursor:pointer;
+}
 
-    font-size:12px;
+.primary-btn{
+    border:0;
 
+    padding:14px 25px;
+
+    border-radius:14px;
+
+    color:white;
+
+    background:
+        linear-gradient(135deg,#7597ff,#9686f3);
+
+    box-shadow:
+        0 12px 25px rgba(103,126,232,.25);
+
+    font-size:14px;
     font-weight:600;
 
-    transition:.3s;
+    transition:.25s;
 }
 
-
-.hero-button:hover{
-
-    background:rgba(109,140,255,.12);
-
-    border-color:
-        rgba(109,140,255,.45);
-
-    transform:translateY(-2px);
+.primary-btn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 18px 30px rgba(103,126,232,.32);
 }
 
+.secondary-btn{
+    padding:13px 22px;
 
-/* =========================================================
-   HERO ORBIT
-========================================================= */
+    border-radius:14px;
 
-.hero-visual{
+    border:1px solid #d9dff0;
 
-    height:520px;
+    background:white;
 
-    position:relative;
+    color:#69728f;
+
+    font-size:13px;
+
+    transition:.25s;
+}
+
+.secondary-btn:hover{
+    border-color:#b7c1e2;
+}
+
+/* STEPS */
+
+.steps{
+    display:flex;
+    gap:25px;
+
+    margin-top:70px;
+}
+
+.step{
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.step-num{
+    width:35px;
+    height:35px;
 
     display:grid;
-
     place-items:center;
-}
-
-
-.orbit{
-
-    position:absolute;
-
-    border:1px solid
-        rgba(109,140,255,.13);
 
     border-radius:50%;
 
-    transform:rotate(-20deg);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    font-weight:600;
 }
 
+.step:nth-child(1) .step-num{
+    background:#e3edff;
+    color:#5d80e8;
+}
 
-.orbit.one{
+.step:nth-child(2) .step-num{
+    background:#eeeaff;
+    color:#8374df;
+}
+
+.step:nth-child(3) .step-num{
+    background:#ffe6ef;
+    color:#d7658d;
+}
+
+.step:nth-child(4) .step-num{
+    background:#fff1cc;
+    color:#c69a37;
+}
+
+.step-text{
+    font-size:10px;
+    line-height:1.5;
+    color:#929ab2;
+}
+
+.step-text strong{
+    display:block;
+    color:#555e7c;
+    font-size:11px;
+}
+
+/* GRAPH CARD */
+
+.graph-card{
+    position:relative;
+
+    min-height:650px;
+
+    padding:25px;
+
+    background:rgba(255,255,255,.78);
+
+    border:1px solid rgba(218,224,241,.9);
+
+    border-radius:30px;
+
+    box-shadow:var(--shadow);
+
+    backdrop-filter:blur(15px);
+}
+
+.graph-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:5px 5px 18px;
+}
+
+.graph-title{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:#78819f;
+}
+
+.graph-title strong{
+    color:#3d4665;
+}
+
+.legend{
+    display:flex;
+    gap:16px;
+
+    font-size:10px;
+    color:#7e87a2;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.legend-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+}
+
+.legend-dot.blue{
+    background:var(--blue);
+}
+
+.legend-dot.pink{
+    background:var(--pink);
+}
+
+.legend-dot.yellow{
+    background:var(--yellow);
+}
+
+/* GRAPH */
+
+.graph{
+    position:relative;
+
+    height:500px;
+
+    border:1px solid #e3e7f4;
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    background:
+        linear-gradient(rgba(215,222,242,.5) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(215,222,242,.5) 1px,transparent 1px),
+        #fbfcff;
+
+    background-size:50px 50px;
+}
+
+/* axis */
+
+.axis-x{
+    position:absolute;
+    left:65px;
+    right:25px;
+    bottom:50px;
+
+    height:1px;
+
+    background:#aab4d0;
+}
+
+.axis-y{
+    position:absolute;
+    left:65px;
+    top:30px;
+    bottom:50px;
+
+    width:1px;
+
+    background:#aab4d0;
+}
+
+.axis-x::after{
+    content:"X₁ →";
+
+    position:absolute;
+    right:-4px;
+    top:10px;
+
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;
+    color:#8791ae;
+}
+
+.axis-y::after{
+    content:"X₂";
+
+    position:absolute;
+    top:-5px;
+    left:-12px;
+
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:#8791ae;
+}
+
+/* ticks */
+
+.tick{
+    position:absolute;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9px;
+    color:#a2aac0;
+}
+
+/* distance circle */
+
+.search-circle{
+    position:absolute;
 
     width:420px;
     height:420px;
+
+    border:2px dashed #b7c6fa;
+
+    border-radius:50%;
+
+    left:calc(47% - 210px);
+    top:calc(53% - 210px);
+
+    background:rgba(220,228,255,.13);
+
+    transition:.6s;
+
+    pointer-events:none;
 }
 
-
-.orbit.two{
-
-    width:330px;
-    height:330px;
-
-    border-color:
-        rgba(255,113,132,.12);
-
-    transform:rotate(25deg);
-}
-
-
-.orbit.three{
-
-    width:510px;
-    height:210px;
-
-    border-color:
-        rgba(160,130,255,.11);
-
-    transform:rotate(-25deg);
-}
-
-
-.hero-point{
+.search-circle::after{
+    content:"K = 3  ·  SEARCH RADIUS";
 
     position:absolute;
 
+    bottom:20px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    white-space:nowrap;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    background:white;
+
+    color:#7789d5;
+
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9px;
+
+    box-shadow:0 5px 15px rgba(80,100,170,.1);
+}
+
+/* lines */
+
+.distance-line{
+    position:absolute;
+
+    height:2px;
+
+    transform-origin:left center;
+
+    background:repeating-linear-gradient(
+        90deg,
+        #a8b8ef 0 7px,
+        transparent 7px 13px
+    );
+
+    opacity:.8;
+
+    z-index:2;
+
+    transition:.5s;
+}
+
+/* points */
+
+.point{
+    position:absolute;
+
+    width:56px;
+    height:56px;
+
     border-radius:50%;
 
     display:grid;
-
     place-items:center;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:11px;
-
-    font-weight:bold;
-
-    box-shadow:
-        inset -12px -16px 25px rgba(0,0,0,.18),
-        inset 10px 8px 20px rgba(255,255,255,.15),
-        0 20px 45px rgba(0,0,0,.3);
-
-    animation:float 5s ease-in-out infinite;
-}
-
-
-.hp-a{
-
-    width:85px;
-    height:85px;
-
-    left:15%;
-    top:20%;
-
-    background:
-        linear-gradient(
-            145deg,
-            #8fa7ff,
-            #506bd4
-        );
-
-}
-
-
-.hp-b{
-
-    width:65px;
-    height:65px;
-
-    right:16%;
-    top:17%;
-
-    background:
-        linear-gradient(
-            145deg,
-            #ff9eaa,
-            #d65a6d
-        );
-
-    animation-delay:-2s;
-}
-
-
-.hp-c{
-
-    width:92px;
-    height:92px;
-
-    right:10%;
-    bottom:18%;
-
-    background:
-        linear-gradient(
-            145deg,
-            #ff8998,
-            #bd4d62
-        );
-
-    animation-delay:-3s;
-}
-
-
-.hp-d{
-
-    width:55px;
-    height:55px;
-
-    left:18%;
-    bottom:18%;
-
-    background:
-        linear-gradient(
-            145deg,
-            #899fff,
-            #526dd9
-        );
-
-    animation-delay:-1.5s;
-}
-
-
-@keyframes float{
-
-    0%,100%{
-        transform:translateY(0);
-    }
-
-    50%{
-        transform:translateY(-15px);
-    }
-
-}
-
-
-.hero-q{
-
-    width:130px;
-    height:130px;
-
-    border-radius:50%;
-
-    background:
-        radial-gradient(
-            circle at 30% 25%,
-            #fff8d6,
-            #ffd66a 50%,
-            #d69d28 100%
-        );
-
-    display:grid;
-
-    place-items:center;
-
-    position:relative;
 
     z-index:5;
 
-    color:#493a18;
+    font-family:"IBM Plex Mono",monospace;
 
-    box-shadow:
-        inset -15px -20px 30px
-            rgba(120,75,0,.18),
+    font-size:12px;
+    font-weight:600;
 
-        inset 12px 10px 25px
-            rgba(255,255,255,.75),
-
-        0 30px 60px
-            rgba(0,0,0,.35),
-
-        0 0 50px
-            rgba(255,214,106,.12);
-
-    animation:qfloat 4s ease-in-out infinite;
+    transition:
+        transform .5s,
+        box-shadow .5s,
+        opacity .5s;
 }
 
-
-.hero-q::before,
-.hero-q::after{
-
+.point::after{
     content:"";
 
     position:absolute;
-
-    inset:-18px;
-
-    border:1px solid
-        rgba(255,214,106,.25);
+    inset:-7px;
 
     border-radius:50%;
 
-    animation:ring 2.8s infinite;
+    border:1px solid transparent;
+
+    transition:.4s;
 }
 
+.point.normal{
+    background:
+        linear-gradient(145deg,#8ca9ff,#6f8ff2);
 
-.hero-q::after{
+    color:white;
 
-    inset:-35px;
-
-    animation-delay:1s;
+    box-shadow:
+        0 12px 28px rgba(102,130,235,.28);
 }
 
+.point.risk{
+    background:
+        linear-gradient(145deg,#f5a2bd,#e47b9d);
 
-.hero-q strong{
+    color:white;
 
-    font-size:27px;
+    box-shadow:
+        0 12px 28px rgba(225,111,151,.25);
 }
 
+.point.q{
+    width:78px;
+    height:78px;
 
-.hero-q small{
+    background:
+        linear-gradient(145deg,#ffeaa3,#ffd364);
 
-    display:block;
+    color:#5c512d;
 
-    font-family:"Space Mono",monospace;
+    box-shadow:
+        0 15px 35px rgba(240,193,77,.35);
 
-    font-size:7px;
+    font-size:18px;
 
-    margin-top:3px;
-
-    opacity:.7;
+    border:5px solid rgba(255,255,255,.8);
 }
 
+.point.q small{
+    position:absolute;
 
-@keyframes qfloat{
+    top:68px;
 
+    white-space:nowrap;
+
+    font-family:"IBM Plex Mono",monospace;
+
+    font-size:9px;
+
+    color:#aa9250;
+}
+
+/* labels */
+
+.point-label{
+    position:absolute;
+
+    z-index:7;
+
+    font-family:"IBM Plex Mono",monospace;
+
+    font-size:11px;
+
+    font-weight:600;
+}
+
+.label-blue{
+    color:#5873d5;
+}
+
+.label-pink{
+    color:#d26489;
+}
+
+.label-q{
+    color:#79662e;
+}
+
+/* distance labels */
+
+.distance{
+    position:absolute;
+
+    z-index:8;
+
+    padding:5px 9px;
+
+    background:white;
+
+    border:1px solid #e1e5f1;
+
+    border-radius:8px;
+
+    box-shadow:0 5px 14px rgba(78,93,145,.08);
+
+    font-family:"IBM Plex Mono",monospace;
+
+    font-size:10px;
+
+    font-weight:600;
+
+    color:#6f7b9e;
+}
+
+/* coordinates */
+
+.coordinate{
+    position:absolute;
+
+    z-index:7;
+
+    font-family:"IBM Plex Mono",monospace;
+
+    font-size:9px;
+
+    color:#9aa2b9;
+}
+
+/* graph positions */
+
+.point-a{
+    left:15%;
+    top:59%;
+}
+
+.point-b{
+    left:31%;
+    top:32%;
+}
+
+.point-c{
+    left:76%;
+    top:17%;
+}
+
+.point-d{
+    left:80%;
+    top:62%;
+}
+
+.point-q{
+    left:47%;
+    top:49%;
+}
+
+.label-a{
+    left:16%;
+    top:70%;
+}
+
+.label-b{
+    left:32%;
+    top:43%;
+}
+
+.label-c{
+    left:77%;
+    top:28%;
+}
+
+.label-d{
+    left:81%;
+    top:73%;
+}
+
+.coord-a{
+    left:14.5%;
+    top:73%;
+}
+
+.coord-b{
+    left:31%;
+    top:46%;
+}
+
+.coord-c{
+    left:76%;
+    top:31%;
+}
+
+.coord-d{
+    left:80%;
+    top:76%;
+}
+
+.coord-q{
+    left:46.8%;
+    top:67%;
+}
+
+.dist-a{
+    left:29%;
+    top:55%;
+}
+
+.dist-b{
+    left:39%;
+    top:42%;
+}
+
+.dist-c{
+    left:59%;
+    top:29%;
+}
+
+.dist-d{
+    left:63%;
+    top:59%;
+}
+
+/* right information */
+
+.info-panel{
+    position:absolute;
+
+    right:22px;
+    bottom:22px;
+
+    width:210px;
+
+    padding:17px;
+
+    border-radius:17px;
+
+    background:rgba(255,255,255,.93);
+
+    border:1px solid #e4e7f2;
+
+    box-shadow:0 12px 30px rgba(75,91,145,.1);
+}
+
+.info-small{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9px;
+    color:#9aa2ba;
+
+    margin-bottom:7px;
+}
+
+.info-result{
+    font-size:25px;
+    font-weight:800;
+
+    color:#5e78dc;
+}
+
+.info-vote{
+    margin-top:5px;
+
+    font-size:10px;
+    color:#858da6;
+}
+
+/* tie */
+
+.tie-note{
+    position:absolute;
+
+    left:18px;
+    bottom:20px;
+
+    max-width:230px;
+
+    padding:13px 15px;
+
+    border-radius:14px;
+
+    background:#fff5f8;
+
+    border:1px solid #f5dce5;
+
+    color:#b16a84;
+
+    font-size:10px;
+
+    line-height:1.7;
+}
+
+.tie-note strong{
+    color:#d05f85;
+}
+
+/* interaction */
+
+.running .search-circle{
+    transform:scale(1.04);
+}
+
+.running .point{
+    animation:floatPoint 1.8s ease-in-out infinite;
+}
+
+.running .point-a,
+.running .point-b{
+    box-shadow:
+        0 0 0 8px rgba(120,152,255,.13),
+        0 12px 30px rgba(100,130,235,.35);
+}
+
+.running .point-c,
+.running .point-d{
+    box-shadow:
+        0 0 0 8px rgba(242,140,174,.12),
+        0 12px 30px rgba(225,111,151,.32);
+}
+
+@keyframes floatPoint{
     0%,100%{
         transform:translateY(0);
     }
-
     50%{
-        transform:translateY(-12px);
+        transform:translateY(-5px);
     }
-
 }
 
+/* bottom section */
 
-@keyframes ring{
+.section{
+    max-width:1450px;
+    margin:auto;
 
-    0%{
-        transform:scale(.75);
-        opacity:.6;
-    }
-
-    75%,100%{
-        transform:scale(1.2);
-        opacity:0;
-    }
-
+    padding:80px 5vw 120px;
 }
 
+.section-heading{
+    text-align:center;
 
-/* =========================================================
-   IDEA
-========================================================= */
-
-.idea{
-
-    padding:100px 7vw;
-
-    border-top:1px solid var(--line);
-
-    background:#0a0d14;
+    margin-bottom:50px;
 }
 
-
-.idea-title{
-
-    max-width:800px;
-
-    font-size:
-        clamp(45px,6vw,85px);
-
-    line-height:.86;
-
-    letter-spacing:-.08em;
+.section-heading .mini{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;
+    letter-spacing:.18em;
+    color:#a1a9c0;
 }
 
+.section-heading h2{
+    margin:12px 0 8px;
 
-.idea-title span{
+    font-size:42px;
 
-    color:#4f5869;
+    letter-spacing:-.04em;
 }
 
+.section-heading p{
+    margin:0;
 
-.idea-description{
-
-    max-width:620px;
-
-    margin-top:30px;
-
-    color:#747d8c;
-
-    font-size:16px;
-
-    line-height:1.8;
+    color:#8991aa;
 }
 
+/* concept cards */
 
-.idea-steps{
-
-    margin-top:60px;
-
+.concepts{
     display:grid;
-
-    grid-template-columns:
-        repeat(3,1fr);
-
-    gap:18px;
+    grid-template-columns:repeat(3,1fr);
+    gap:22px;
 }
 
-
-.idea-card{
+.concept{
+    position:relative;
 
     padding:30px;
 
     min-height:220px;
 
-    border-radius:22px;
+    border-radius:24px;
 
-    border:1px solid var(--line);
+    background:white;
 
-    background:
-        rgba(255,255,255,.025);
+    border:1px solid #e4e8f3;
 
-    position:relative;
+    box-shadow:var(--shadow);
 
     overflow:hidden;
-
-    transition:.3s;
 }
 
+.concept-number{
+    font-family:"IBM Plex Mono",monospace;
 
-.idea-card:hover{
+    font-size:11px;
 
-    transform:translateY(-5px);
-
-    border-color:
-        rgba(109,140,255,.3);
-
-    background:
-        rgba(109,140,255,.04);
+    color:#9ba4bc;
 }
 
+.concept h3{
+    margin:35px 0 8px;
 
-.idea-number{
-
-    font-family:"Space Mono",monospace;
-
-    font-size:9px;
-
-    color:#555e6e;
-
-    margin-bottom:40px;
+    font-size:22px;
 }
 
+.concept p{
+    color:#858da5;
 
-.idea-card h3{
-
-    font-size:25px;
-
-    letter-spacing:-.04em;
-}
-
-
-.idea-card p{
-
-    margin-top:10px;
-
-    color:#737c8b;
-
-    font-size:12px;
-
-    line-height:1.7;
-}
-
-
-.card-orb{
-
-    position:absolute;
-
-    width:90px;
-    height:90px;
-
-    border-radius:50%;
-
-    right:-30px;
-    bottom:-35px;
-
-    background:
-        rgba(109,140,255,.08);
-
-    box-shadow:
-        0 0 50px
-            rgba(109,140,255,.08);
-}
-
-
-/* =========================================================
-   LAB HEADER
-========================================================= */
-
-.lab{
-
-    padding:120px 4vw 140px;
-
-    background:
-
-        radial-gradient(
-            circle at 50% 0%,
-            rgba(109,140,255,.08),
-            transparent 40%
-        ),
-
-        #080b12;
-}
-
-
-.lab-head{
-
-    margin:0 3vw 45px;
-
-    display:flex;
-
-    align-items:flex-end;
-
-    justify-content:space-between;
-}
-
-
-.lab-head h2{
-
-    font-size:
-        clamp(50px,7vw,100px);
-
-    line-height:.8;
-
-    letter-spacing:-.08em;
-}
-
-
-.lab-head h2 span{
-
-    color:#4c5565;
-}
-
-
-.lab-note{
-
-    max-width:310px;
-
-    color:#737c8a;
-
-    font-size:12px;
+    font-size:13px;
 
     line-height:1.8;
 }
 
-
-/* =========================================================
-   PLAYGROUND
-========================================================= */
-
-.playground{
-
-    min-height:720px;
-
-    display:grid;
-
-    grid-template-columns:
-        minmax(0,1fr)
-        350px;
-
-    overflow:hidden;
-
-    border-radius:30px;
-
-    border:1px solid var(--line);
-
-    background:#0c1018;
-
-    box-shadow:var(--shadow);
-}
-
-
-/* =========================================================
-   GRAPH
-========================================================= */
-
-.graph{
-
-    position:relative;
-
-    min-height:720px;
-
-    overflow:hidden;
-
-    background:
-
-        radial-gradient(
-            circle at 48% 53%,
-            rgba(109,140,255,.10),
-            transparent 34%
-        );
-}
-
-
-.graph::before{
-
-    content:"";
-
-    position:absolute;
-
-    inset:0;
-
-    background-image:
-
-        linear-gradient(
-            rgba(255,255,255,.035) 1px,
-            transparent 1px
-        ),
-
-        linear-gradient(
-            90deg,
-            rgba(255,255,255,.035) 1px,
-            transparent 1px
-        );
-
-    background-size:55px 55px;
-
-    mask-image:
-        radial-gradient(
-            circle,
-            black,
-            transparent 82%
-        );
-}
-
-
-.graph-top{
-
-    position:absolute;
-
-    left:25px;
-    top:25px;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:8px;
-
-    color:#505969;
-
-    z-index:3;
-}
-
-
-.graph-bottom{
-
+.concept-icon{
     position:absolute;
 
     right:25px;
-    bottom:25px;
+    top:25px;
 
-    font-family:"Space Mono",monospace;
+    width:45px;
+    height:45px;
 
-    font-size:8px;
-
-    color:#505969;
-
-    z-index:3;
-}
-
-
-.graph svg{
-
-    position:absolute;
-
-    inset:0;
-
-    width:100%;
-
-    height:100%;
-}
-
-
-/* axes */
-
-.axis{
-
-    stroke:#323a48;
-
-    stroke-width:1;
-}
-
-
-.axis-text{
-
-    fill:#555e6d;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:9px;
-}
-
-
-/* lines */
-
-.distance-line{
-
-    stroke:#4f5868;
-
-    stroke-width:1.5;
-
-    stroke-dasharray:7 8;
-
-    opacity:0;
-
-    transition:
-        opacity .7s,
-        stroke .5s,
-        stroke-width .5s;
-}
-
-
-.distance-line.show{
-
-    opacity:1;
-}
-
-
-.distance-line.selected{
-
-    stroke:var(--blue);
-
-    stroke-width:3;
-
-    filter:
-        drop-shadow(
-            0 0 7px
-            rgba(109,140,255,.35)
-        );
-}
-
-
-/* distance */
-
-.distance-label{
-
-    fill:#8c95a4;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:11px;
-
-    opacity:0;
-
-    transition:.5s;
-}
-
-
-.distance-label.show{
-
-    opacity:1;
-}
-
-
-/* points */
-
-.data-point{
-
-    stroke:#080b12;
-
-    stroke-width:5;
-
-    filter:
-        drop-shadow(
-            0 8px 10px rgba(0,0,0,.3)
-        );
-}
-
-
-.normal-point{
-
-    fill:var(--blue);
-
-    filter:
-        drop-shadow(
-            0 0 12px
-            rgba(109,140,255,.5)
-        );
-}
-
-
-.risk-point{
-
-    fill:var(--pink);
-
-    filter:
-        drop-shadow(
-            0 0 12px
-            rgba(255,113,132,.4)
-        );
-}
-
-
-.query-point{
-
-    fill:var(--yellow);
-
-    filter:
-        drop-shadow(
-            0 0 17px
-            rgba(255,215,106,.55)
-        );
-}
-
-
-.point-label{
-
-    fill:#e6e9ef;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:12px;
-
-    font-weight:bold;
-}
-
-
-.point-coord{
-
-    fill:#5f6877;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:9px;
-}
-
-
-/* radius */
-
-.radius{
-
-    fill:
-        rgba(109,140,255,.045);
-
-    stroke:var(--blue);
-
-    stroke-width:1.5;
-
-    stroke-dasharray:9 9;
-
-    opacity:0;
-
-    transition:.8s;
-
-    filter:
-        drop-shadow(
-            0 0 10px
-            rgba(109,140,255,.15)
-        );
-}
-
-
-.radius.show{
-
-    opacity:1;
-}
-
-
-/* =========================================================
-   TIE
-========================================================= */
-
-.tie{
-
-    position:absolute;
-
-    right:7%;
-
-    top:14%;
-
-    padding:10px 15px;
-
-    border-radius:100px;
-
-    background:
-        rgba(12,16,24,.75);
-
-    border:
-        1px solid rgba(255,255,255,.1);
-
-    backdrop-filter:blur(15px);
-
-    font-family:"Space Mono",monospace;
-
-    font-size:8px;
-
-    color:#737c8a;
-
-    opacity:0;
-
-    transform:translateY(10px);
-
-    transition:.5s;
-
-    z-index:5;
-}
-
-
-.tie.show{
-
-    opacity:1;
-
-    transform:translateY(0);
-}
-
-
-.tie strong{
-
-    color:#dfe3ea;
-}
-
-
-/* =========================================================
-   INFO PANEL
-========================================================= */
-
-.info{
-
-    padding:34px;
-
-    background:
-        rgba(15,19,28,.88);
-
-    backdrop-filter:blur(25px);
-
-    border-left:1px solid var(--line);
-
-    display:flex;
-
-    flex-direction:column;
-}
-
-
-.info-top{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    color:#5e6878;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:8px;
-}
-
-
-.info h3{
-
-    margin-top:35px;
-
-    font-size:40px;
-
-    line-height:.9;
-
-    letter-spacing:-.065em;
-}
-
-
-.info-description{
-
-    margin-top:18px;
-
-    color:#788291;
-
-    font-size:13px;
-
-    line-height:1.75;
-}
-
-
-/* distance rows */
-
-.distance-list{
-
-    margin-top:32px;
-
-    border-top:1px solid var(--line);
-}
-
-
-.distance-row{
+    border-radius:14px;
 
     display:grid;
-
-    grid-template-columns:
-        30px 1fr auto;
-
-    align-items:center;
-
-    padding:15px 0;
-
-    border-bottom:
-        1px solid rgba(255,255,255,.055);
-
-    color:#5e6775;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:9px;
-
-    transition:.3s;
-}
-
-
-.distance-row.active{
-
-    color:#e7eaf0;
-}
-
-
-.distance-row.active
-.distance-value{
-
-    color:var(--blue);
-}
-
-
-.distance-row.risk
-.distance-value{
-
-    color:var(--pink);
-}
-
-
-/* =========================================================
-   CONTROL
-========================================================= */
-
-.control{
-
-    margin-top:auto;
-
-    padding-top:30px;
-}
-
-
-.control-label{
-
-    font-family:"Space Mono",monospace;
-
-    color:#5d6674;
-
-    font-size:8px;
-
-    margin-bottom:10px;
-}
-
-
-.k-top{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:flex-end;
-}
-
-
-.k-number{
-
-    font-size:70px;
-
-    line-height:.75;
-
-    letter-spacing:-.1em;
-
-    font-weight:700;
-}
-
-
-.k-label{
-
-    font-family:"Space Mono",monospace;
-
-    color:#5d6674;
-
-    font-size:8px;
-
-    line-height:1.5;
-}
-
-
-input[type="range"]{
-
-    width:100%;
-
-    margin-top:23px;
-
-    accent-color:var(--blue);
-}
-
-
-.action{
-
-    width:100%;
-
-    margin-top:18px;
-
-    padding:16px;
-
-    border:0;
-
-    border-radius:12px;
-
-    background:#eef1f8;
-
-    color:#0a0d13;
-
-    font-size:11px;
-
-    font-weight:700;
-
-    cursor:pointer;
-
-    transition:.25s;
-}
-
-
-.action:hover{
-
-    transform:translateY(-2px);
-
-    box-shadow:
-        0 15px 35px
-        rgba(255,255,255,.07);
-}
-
-
-.reset{
-
-    width:100%;
-
-    margin-top:8px;
-
-    padding:12px;
-
-    border:1px solid var(--line);
-
-    border-radius:10px;
-
-    background:transparent;
-
-    color:#5f6877;
-
-    font-size:9px;
-
-    cursor:pointer;
-}
-
-
-/* =========================================================
-   MATH
-========================================================= */
-
-.math{
-
-    padding:120px 7vw;
-
-    background:#0d1119;
-
-    border-top:1px solid var(--line);
-}
-
-
-.math-grid{
-
-    display:grid;
-
-    grid-template-columns:
-        .8fr
-        1.2fr;
-
-    gap:10vw;
-
-    align-items:center;
-}
-
-
-.math-title{
-
-    font-size:
-        clamp(50px,7vw,100px);
-
-    line-height:.8;
-
-    letter-spacing:-.08em;
-}
-
-
-.math-title span{
-
-    color:#596373;
-}
-
-
-.formula-box{
-
-    padding:32px 0;
-
-    border-top:1px solid var(--line);
-
-    border-bottom:1px solid var(--line);
-
-    font-family:"Space Mono",monospace;
-}
-
-
-.formula-label{
-
-    color:#5c6573;
-
-    font-size:8px;
-
-    margin-bottom:15px;
-}
-
-
-.formula{
-
-    font-size:18px;
-
-    line-height:2;
-}
-
-
-.formula strong{
-
-    color:var(--blue2);
-}
-
-
-.math-copy{
-
-    margin-top:28px;
-
-    color:#747e8d;
-
-    font-size:13px;
-
-    line-height:1.9;
-}
-
-
-/* =========================================================
-   VOTE
-========================================================= */
-
-.vote-section{
-
-    padding:120px 7vw;
-
-    background:#0a0d14;
-
-    border-top:1px solid var(--line);
-}
-
-
-.vote-heading{
-
-    max-width:700px;
-}
-
-
-.vote-heading h2{
-
-    font-size:
-        clamp(50px,7vw,100px);
-
-    line-height:.8;
-
-    letter-spacing:-.08em;
-}
-
-
-.vote-heading p{
-
-    margin-top:25px;
-
-    color:#737d8b;
-
-    line-height:1.8;
-
-    font-size:14px;
-}
-
-
-.votes{
-
-    margin-top:65px;
-
-    display:grid;
-
-    grid-template-columns:1fr 1fr;
-
-    gap:20px;
-}
-
-
-.vote-card{
-
-    padding:35px;
-
-    border-radius:25px;
-
-    border:1px solid var(--line);
-
-    background:
-        rgba(255,255,255,.025);
-}
-
-
-.vote-name{
-
-    font-family:"Space Mono",monospace;
-
-    font-size:8px;
-
-    color:#697281;
-}
-
-
-.vote-number{
-
-    margin-top:20px;
-
-    font-size:100px;
-
-    line-height:.75;
-
-    letter-spacing:-.09em;
-}
-
-
-.vote-card.normal
-.vote-number{
-
-    color:var(--blue);
-}
-
-
-.vote-card.risk
-.vote-number{
-
-    color:var(--pink);
-}
-
-
-.vote-bar{
-
-    height:8px;
-
-    margin-top:35px;
-
-    border-radius:20px;
-
-    background:#1d2330;
-
-    overflow:hidden;
-}
-
-
-.vote-fill{
-
-    width:0;
-
-    height:100%;
-
-    border-radius:20px;
-
-    transition:1.2s;
-}
-
-
-.vote-fill.blue{
-
-    background:var(--blue);
-
-    box-shadow:
-        0 0 20px
-        rgba(109,140,255,.3);
-}
-
-
-.vote-fill.pink{
-
-    background:var(--pink);
-
-    box-shadow:
-        0 0 20px
-        rgba(255,113,132,.25);
-}
-
-
-.vote-detail{
-
-    margin-top:18px;
-
-    color:#727b89;
-
-    font-size:12px;
-}
-
-
-/* =========================================================
-   FINAL
-========================================================= */
-
-.final{
-
-    min-height:90vh;
-
-    padding:120px 7vw;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    text-align:center;
-
-    background:
-
-        radial-gradient(
-            circle at center,
-            rgba(109,140,255,.12),
-            transparent 40%
-        ),
-
-        #080b12;
-
-    border-top:1px solid var(--line);
-}
-
-
-.final-content{
-
-    max-width:1100px;
-}
-
-
-.final-small{
-
-    font-family:"Space Mono",monospace;
-
-    color:#5d6674;
-
-    font-size:9px;
-
-    letter-spacing:.16em;
-
-    margin-bottom:35px;
-}
-
-
-.final h2{
-
-    font-size:
-        clamp(80px,14vw,190px);
-
-    line-height:.72;
-
-    letter-spacing:-.1em;
-}
-
-
-.final h2 span{
-
-    color:var(--blue);
-
-    text-shadow:
-        0 0 70px
-        rgba(109,140,255,.2);
-}
-
-
-.final-proof{
-
-    margin-top:55px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    gap:14px;
-}
-
-
-.proof{
-
-    width:85px;
-    height:85px;
-
-    border-radius:22px;
-
-    display:grid;
-
     place-items:center;
 
+    font-family:"IBM Plex Mono",monospace;
+    font-weight:600;
+}
+
+.concept:nth-child(1) .concept-icon{
+    background:#e9efff;
+    color:#6482e6;
+}
+
+.concept:nth-child(2) .concept-icon{
+    background:#eeeaff;
+    color:#8374df;
+}
+
+.concept:nth-child(3) .concept-icon{
+    background:#ffe8f0;
+    color:#d66a8e;
+}
+
+/* formula */
+
+.formula-section{
+    max-width:1100px;
+    margin:30px auto 0;
+
+    padding:45px;
+
+    border-radius:28px;
+
     background:
-        rgba(255,255,255,.04);
+        linear-gradient(
+            135deg,
+            #eef2ff,
+            #faf9ff 50%,
+            #fff1f5
+        );
 
-    border:1px solid var(--line);
+    border:1px solid #e0e5f3;
 
-    font-size:35px;
-
-    font-weight:700;
+    text-align:center;
 }
 
+.formula-title{
+    font-family:"IBM Plex Mono",monospace;
 
-.proof.blue{
+    color:#8c95af;
 
-    color:var(--blue);
+    font-size:10px;
+
+    letter-spacing:.15em;
 }
 
+.formula{
+    margin:25px 0;
 
-.proof.pink{
+    font-family:"IBM Plex Mono",monospace;
 
-    color:var(--pink);
+    font-size:28px;
+
+    color:#39415e;
 }
 
+.formula-description{
+    color:#7e87a2;
 
-.vs{
+    font-size:12px;
+}
 
-    color:#4e5766;
+/* footer */
 
-    font-family:"Space Mono",monospace;
+footer{
+    padding:35px 5vw;
+
+    border-top:1px solid #e2e6f1;
+
+    display:flex;
+    justify-content:space-between;
+
+    color:#a0a7ba;
+
+    font-family:"IBM Plex Mono",monospace;
 
     font-size:9px;
 }
 
+/* responsive */
 
-.final-text{
-
-    max-width:520px;
-
-    margin:30px auto 0;
-
-    color:#747e8d;
-
-    font-size:14px;
-
-    line-height:1.8;
-}
-
-
-/* =========================================================
-   FOOTER
-========================================================= */
-
-footer{
-
-    padding:25px 7vw;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    border-top:1px solid var(--line);
-
-    color:#444c58;
-
-    font-family:"Space Mono",monospace;
-
-    font-size:8px;
-}
-
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media(max-width:950px){
+@media(max-width:1100px){
 
     .hero{
-
         grid-template-columns:1fr;
     }
 
-    .hero-visual{
-
-        height:450px;
+    .hero-left{
+        text-align:center;
     }
 
-    .playground{
-
-        grid-template-columns:1fr;
+    .description{
+        margin-left:auto;
+        margin-right:auto;
     }
 
-    .graph{
-
-        min-height:600px;
+    .buttons{
+        justify-content:center;
     }
 
-    .info{
-
-        border-left:0;
-
-        border-top:1px solid var(--line);
-
-        min-height:600px;
-    }
-
-    .math-grid{
-
-        grid-template-columns:1fr;
-
-        gap:50px;
+    .steps{
+        justify-content:center;
     }
 
 }
 
-
-@media(max-width:650px){
+@media(max-width:700px){
 
     nav{
-
         padding:0 20px;
     }
 
-    .nav-info{
-
+    .nav-right .nav-link{
         display:none;
     }
 
     .hero{
-
-        padding:70px 25px;
+        padding:70px 20px;
     }
 
-    .hero h1{
-
+    h1{
         font-size:70px;
     }
 
-    .hero-visual{
-
-        height:350px;
+    .steps{
+        flex-wrap:wrap;
     }
 
-    .orbit.one{
-
-        width:290px;
-        height:290px;
-    }
-
-    .orbit.two{
-
-        width:230px;
-        height:230px;
-    }
-
-    .orbit.three{
-
-        width:350px;
-        height:150px;
-    }
-
-    .hero-q{
-
-        width:100px;
-        height:100px;
-    }
-
-    .hero-q strong{
-
-        font-size:22px;
-    }
-
-    .idea,
-    .lab,
-    .math,
-    .vote-section,
-    .final{
-
-        padding-left:22px;
-        padding-right:22px;
-    }
-
-    .idea-steps{
-
-        grid-template-columns:1fr;
-    }
-
-    .lab-head{
-
-        display:block;
-    }
-
-    .lab-note{
-
-        margin-top:25px;
-    }
-
-    .playground{
-
-        border-radius:20px;
+    .graph-card{
+        padding:12px;
     }
 
     .graph{
-
-        min-height:480px;
+        height:430px;
     }
 
-    .info{
+    .search-circle{
+        width:300px;
+        height:300px;
 
-        padding:25px;
+        left:calc(47% - 150px);
+        top:calc(53% - 150px);
     }
 
-    .votes{
+    .info-panel{
+        width:170px;
+    }
 
+    .concepts{
         grid-template-columns:1fr;
     }
 
-    .final h2{
-
-        font-size:78px;
+    .section{
+        padding-left:20px;
+        padding-right:20px;
     }
 
 }
@@ -2041,127 +1219,289 @@ footer{
 </style>
 </head>
 
-
 <body>
 
-
-<div class="glow-blue"></div>
-<div class="glow-pink"></div>
-
-
-<!-- =====================================================
-     NAV
-===================================================== -->
+<!-- NAV -->
 
 <nav>
 
-    <div class="brand">
+    <div class="logo">
 
-        <div class="brand-icon">
+        <div class="logo-box">
             K
         </div>
 
-        KNN / INTERACTIVE LAB
+        <div class="logo-text">
+            KNN
+            <span>/</span>
+            INTERACTIVE LAB
+        </div>
 
     </div>
 
+    <div class="nav-right">
 
-    <div class="nav-info">
+        <div class="nav-link">CLASSIFICATION</div>
 
-        <span>CLASSIFICATION</span>
-
-        <span class="live">
-            <i class="live-dot"></i>
+        <div class="live">
+            <span class="live-dot"></span>
             LIVE VISUAL
-        </span>
+        </div>
 
-        <span>2026</span>
+        <div class="nav-link">2026</div>
 
     </div>
 
 </nav>
 
 
-
-<!-- =====================================================
-     HERO
-===================================================== -->
+<!-- HERO -->
 
 <section class="hero">
 
+    <div class="blob one"></div>
+    <div class="blob two"></div>
 
-    <div>
 
-        <div class="hero-kicker">
+    <!-- LEFT -->
+
+    <div class="hero-left">
+
+        <div class="kicker">
             MACHINE LEARNING / K-NEAREST NEIGHBORS
         </div>
 
-
         <h1>
-
-            HOW DOES<br>
-            <span>KNN DECIDE?</span>
-
+            HOW<br>
+            DOES<br>
+            <span class="accent">KNN</span><br>
+            DECIDE?
         </h1>
 
-
-        <p class="hero-description">
-
-            เมื่อข้อมูลใหม่เข้ามา
-            KNN จะมองหา
+        <p class="description">
+            เมื่อข้อมูลใหม่เข้ามา KNN จะมองหา
             <strong>เพื่อนบ้านที่อยู่ใกล้ที่สุด</strong>
             แล้วใช้เสียงส่วนใหญ่ในการตัดสินใจ
-
         </p>
 
+        <div class="buttons">
 
-        <button
-            class="hero-button"
-            onclick="document.querySelector('.lab').scrollIntoView()"
-        >
+            <button
+                class="primary-btn"
+                id="startBtn"
+            >
+                เริ่มการคำนวณ →
+            </button>
 
-            EXPLORE THE MODEL ↓
+            <button
+                class="secondary-btn"
+                onclick="document.querySelector('#how').scrollIntoView()"
+            >
+                ดูหลักการทำงาน
+            </button>
 
-        </button>
+        </div>
+
+
+        <div class="steps">
+
+            <div class="step">
+
+                <div class="step-num">
+                    01
+                </div>
+
+                <div class="step-text">
+                    <strong>วัดระยะ</strong>
+                    จาก Q ไปทุกจุด
+                </div>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-num">
+                    02
+                </div>
+
+                <div class="step-text">
+                    <strong>เลือก K</strong>
+                    เพื่อนบ้านที่ใกล้ที่สุด
+                </div>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-num">
+                    03
+                </div>
+
+                <div class="step-text">
+                    <strong>โหวต</strong>
+                    นับจำนวนแต่ละกลุ่ม
+                </div>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-num">
+                    04
+                </div>
+
+                <div class="step-text">
+                    <strong>ทำนาย</strong>
+                    ผลลัพธ์สุดท้าย
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
 
 
+    <!-- GRAPH -->
 
-    <!-- HERO VISUAL -->
+    <div class="graph-card">
 
-    <div class="hero-visual">
+        <div class="graph-header">
 
+            <div class="graph-title">
+                FEATURE SPACE /
+                <strong>X₁ VS X₂</strong>
+            </div>
 
-        <div class="orbit one"></div>
+            <div class="legend">
 
-        <div class="orbit two"></div>
+                <div class="legend-item">
+                    <span class="legend-dot yellow"></span>
+                    Q New Data
+                </div>
 
-        <div class="orbit three"></div>
+                <div class="legend-item">
+                    <span class="legend-dot blue"></span>
+                    Normal
+                </div>
 
+                <div class="legend-item">
+                    <span class="legend-dot pink"></span>
+                    High Risk
+                </div>
 
-        <div class="hero-point hp-a">
-            A
+            </div>
+
         </div>
 
-        <div class="hero-point hp-b">
-            C
-        </div>
 
-        <div class="hero-point hp-c">
-            D
-        </div>
+        <div
+            class="graph"
+            id="graph"
+        >
 
-        <div class="hero-point hp-d">
-            B
-        </div>
+            <!-- AXIS -->
+
+            <div class="axis-x"></div>
+            <div class="axis-y"></div>
 
 
-        <div class="hero-q">
+            <!-- DISTANCE CIRCLE -->
 
-            <div>
+            <div class="search-circle"></div>
 
-                <strong>Q</strong>
+
+            <!-- DISTANCE LINES -->
+
+            <div
+                class="distance-line"
+                id="lineA"
+            ></div>
+
+            <div
+                class="distance-line"
+                id="lineB"
+            ></div>
+
+            <div
+                class="distance-line"
+                id="lineC"
+            ></div>
+
+            <div
+                class="distance-line"
+                id="lineD"
+            ></div>
+
+
+            <!-- POINT A -->
+
+            <div class="point normal point-a">
+                A
+            </div>
+
+            <div class="point-label label-blue">
+                A
+            </div>
+
+            <div class="coordinate coord-a">
+                (1,2)
+            </div>
+
+
+            <!-- POINT B -->
+
+            <div class="point normal point-b">
+                B
+            </div>
+
+            <div class="point-label label-blue">
+                B
+            </div>
+
+            <div class="coordinate coord-b">
+                (2,3)
+            </div>
+
+
+            <!-- POINT C -->
+
+            <div class="point risk point-c">
+                C
+            </div>
+
+            <div class="point-label label-pink">
+                C
+            </div>
+
+            <div class="coordinate coord-c">
+                (5,6)
+            </div>
+
+
+            <!-- POINT D -->
+
+            <div class="point risk point-d">
+                D
+            </div>
+
+            <div class="point-label label-pink">
+                D
+            </div>
+
+            <div class="coordinate coord-d">
+                (6,5)
+            </div>
+
+
+            <!-- Q -->
+
+            <div class="point q point-q">
+
+                Q
 
                 <small>
                     NEW DATA
@@ -2169,6 +1509,65 @@ footer{
 
             </div>
 
+            <div class="coordinate coord-q">
+                (2,2)
+            </div>
+
+
+            <!-- DISTANCES -->
+
+            <div class="distance dist-a">
+                1.00
+            </div>
+
+            <div class="distance dist-b">
+                1.00
+            </div>
+
+            <div class="distance dist-c">
+                5.00
+            </div>
+
+            <div class="distance dist-d">
+                5.00
+            </div>
+
+
+            <!-- TIE -->
+
+            <div class="tie-note">
+
+                <strong>C และ D</strong>
+                อยู่ห่างจาก Q เท่ากัน
+                <strong>= 5.00</strong><br>
+
+                ทั้งคู่เป็นกลุ่ม
+                <strong>เสี่ยงสูง</strong>
+                จึงไม่กระทบผลการทำนาย
+
+            </div>
+
+
+            <!-- RESULT -->
+
+            <div class="info-panel">
+
+                <div class="info-small">
+                    K = 3 / FINAL PREDICTION
+                </div>
+
+                <div class="info-result">
+                    NORMAL
+                </div>
+
+                <div class="info-vote">
+                    2 เสียง (A,B)
+                    &nbsp;>&nbsp;
+                    1 เสียง (C หรือ D)
+                </div>
+
+            </div>
+
         </div>
 
     </div>
@@ -2176,43 +1575,41 @@ footer{
 </section>
 
 
+<!-- HOW -->
 
-<!-- =====================================================
-     IDEA
-===================================================== -->
+<section
+    class="section"
+    id="how"
+>
 
-<section class="idea">
+    <div class="section-heading">
 
+        <div class="mini">
+            HOW KNN WORKS
+        </div>
 
-    <div class="hero-kicker">
-        THE IDEA
+        <h2>
+            เพื่อนบ้านเป็นคนตัดสิน
+        </h2>
+
+        <p>
+            KNN ใช้ระยะห่างและเสียงส่วนใหญ่ในการจำแนกข้อมูลใหม่
+        </p>
+
     </div>
 
 
-    <div class="idea-title">
-
-        KNN คิดง่ายกว่า<br>
-        <span>ที่คิด.</span>
-
-    </div>
+    <div class="concepts">
 
 
-    <p class="idea-description">
+        <div class="concept">
 
-        อัลกอริทึมจะไม่พยายามสร้างกฎที่ซับซ้อน
-        แต่จะถามคำถามง่าย ๆ ว่า
-        “ข้อมูลใหม่อยู่ใกล้ใครที่สุด?”
-
-    </p>
-
-
-    <div class="idea-steps">
-
-
-        <div class="idea-card">
-
-            <div class="idea-number">
+            <div class="concept-number">
                 01 / MEASURE
+            </div>
+
+            <div class="concept-icon">
+                ↗
             </div>
 
             <h3>
@@ -2220,19 +1617,22 @@ footer{
             </h3>
 
             <p>
-                คำนวณระยะจาก Q
-                ไปยังข้อมูลเดิมทุกจุด
+                คำนวณระยะห่างระหว่างข้อมูลใหม่ Q
+                กับข้อมูลที่มีอยู่ทั้งหมด
+                โดยใช้ Euclidean Distance
             </p>
-
-            <div class="card-orb"></div>
 
         </div>
 
 
-        <div class="idea-card">
+        <div class="concept">
 
-            <div class="idea-number">
+            <div class="concept-number">
                 02 / SELECT
+            </div>
+
+            <div class="concept-icon">
+                K
             </div>
 
             <h3>
@@ -2240,1254 +1640,209 @@ footer{
             </h3>
 
             <p>
-                เลือกเพื่อนบ้านที่ใกล้ที่สุด
-                ตามจำนวน K
+                เรียงลำดับข้อมูลจากระยะใกล้ที่สุด
+                แล้วเลือกจำนวนเพื่อนบ้านตามค่า K
+                ในตัวอย่างนี้ K = 3
             </p>
-
-            <div class="card-orb"></div>
 
         </div>
 
 
-        <div class="idea-card">
+        <div class="concept">
 
-            <div class="idea-number">
+            <div class="concept-number">
                 03 / VOTE
             </div>
 
+            <div class="concept-icon">
+                +
+            </div>
+
             <h3>
-                โหวต
+                ลงคะแนน
             </h3>
 
             <p>
-                คลาสที่มีเสียงมากที่สุด
-                จะเป็นผลลัพธ์
-            </p>
-
-            <div class="card-orb"></div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     LAB
-========================================================= -->
-
-<section class="lab">
-
-
-    <div class="lab-head">
-
-        <div>
-
-            <div class="hero-kicker">
-                INTERACTIVE LAB
-            </div>
-
-            <h2>
-
-                WATCH KNN<br>
-                <span>THINK.</span>
-
-            </h2>
-
-        </div>
-
-
-        <p class="lab-note">
-
-            กดปุ่มด้านขวาเพื่อดูการทำงาน
-            ทีละขั้น ตั้งแต่ข้อมูล
-            ไปจนถึงคำตอบสุดท้าย
-
-        </p>
-
-    </div>
-
-
-
-    <div class="playground">
-
-
-        <!-- =================================================
-             GRAPH
-        ================================================= -->
-
-        <div class="graph">
-
-
-            <div class="graph-top">
-                FEATURE SPACE / X₁ × X₂
-            </div>
-
-
-            <div class="graph-bottom">
-                Q = NEW DATA
-            </div>
-
-
-            <svg
-                viewBox="0 0 800 650"
-                preserveAspectRatio="none"
-            >
-
-
-                <!-- AXES -->
-
-                <line
-                    class="axis"
-                    x1="65"
-                    y1="580"
-                    x2="750"
-                    y2="580"
-                />
-
-                <line
-                    class="axis"
-                    x1="65"
-                    y1="60"
-                    x2="65"
-                    y2="580"
-                />
-
-
-                <text
-                    class="axis-text"
-                    x="725"
-                    y="602"
-                >
-                    X₁ →
-                </text>
-
-                <text
-                    class="axis-text"
-                    x="43"
-                    y="75"
-                >
-                    X₂ ↑
-                </text>
-
-
-                <!-- DISTANCE LINES -->
-
-                <line
-                    id="lineA"
-                    class="distance-line"
-                    x1="270"
-                    y1="410"
-                    x2="170"
-                    y2="410"
-                />
-
-                <line
-                    id="lineB"
-                    class="distance-line"
-                    x1="270"
-                    y1="410"
-                    x2="270"
-                    y2="335"
-                />
-
-                <line
-                    id="lineC"
-                    class="distance-line"
-                    x1="270"
-                    y1="410"
-                    x2="570"
-                    y2="110"
-                />
-
-                <line
-                    id="lineD"
-                    class="distance-line"
-                    x1="270"
-                    y1="410"
-                    x2="645"
-                    y2="185"
-                />
-
-
-                <!-- DISTANCE LABELS -->
-
-                <text
-                    id="distA"
-                    class="distance-label"
-                    x="202"
-                    y="395"
-                >
-                    1.00
-                </text>
-
-                <text
-                    id="distB"
-                    class="distance-label"
-                    x="285"
-                    y="375"
-                >
-                    1.00
-                </text>
-
-                <text
-                    id="distC"
-                    class="distance-label"
-                    x="385"
-                    y="245"
-                >
-                    5.00
-                </text>
-
-                <text
-                    id="distD"
-                    class="distance-label"
-                    x="455"
-                    y="305"
-                >
-                    5.00
-                </text>
-
-
-                <!-- K RADIUS -->
-
-                <circle
-                    id="radius"
-                    class="radius"
-                    cx="270"
-                    cy="410"
-                    r="0"
-                />
-
-
-                <!-- A -->
-
-                <circle
-                    class="data-point normal-point"
-                    cx="170"
-                    cy="410"
-                    r="14"
-                />
-
-                <text
-                    class="point-label"
-                    x="170"
-                    y="380"
-                    text-anchor="middle"
-                >
-                    A
-                </text>
-
-                <text
-                    class="point-coord"
-                    x="170"
-                    y="435"
-                    text-anchor="middle"
-                >
-                    (1,2)
-                </text>
-
-
-                <!-- B -->
-
-                <circle
-                    class="data-point normal-point"
-                    cx="270"
-                    cy="335"
-                    r="14"
-                />
-
-                <text
-                    class="point-label"
-                    x="270"
-                    y="305"
-                    text-anchor="middle"
-                >
-                    B
-                </text>
-
-                <text
-                    class="point-coord"
-                    x="270"
-                    y="360"
-                    text-anchor="middle"
-                >
-                    (2,3)
-                </text>
-
-
-                <!-- C -->
-
-                <circle
-                    class="data-point risk-point"
-                    cx="570"
-                    cy="110"
-                    r="14"
-                />
-
-                <text
-                    class="point-label"
-                    x="570"
-                    y="80"
-                    text-anchor="middle"
-                >
-                    C
-                </text>
-
-                <text
-                    class="point-coord"
-                    x="570"
-                    y="135"
-                    text-anchor="middle"
-                >
-                    (5,6)
-                </text>
-
-
-                <!-- D -->
-
-                <circle
-                    class="data-point risk-point"
-                    cx="645"
-                    cy="185"
-                    r="14"
-                />
-
-                <text
-                    class="point-label"
-                    x="645"
-                    y="155"
-                    text-anchor="middle"
-                >
-                    D
-                </text>
-
-                <text
-                    class="point-coord"
-                    x="645"
-                    y="210"
-                    text-anchor="middle"
-                >
-                    (6,5)
-                </text>
-
-
-                <!-- Q -->
-
-                <circle
-                    class="query-point"
-                    cx="270"
-                    cy="410"
-                    r="17"
-                />
-
-                <text
-                    class="point-label"
-                    x="270"
-                    y="455"
-                    text-anchor="middle"
-                >
-                    Q = (2,2)
-                </text>
-
-            </svg>
-
-
-            <div
-                class="tie"
-                id="tie"
-            >
-
-                C + D&nbsp; · &nbsp;
-
-                <strong>
-                    SAME DISTANCE 5.00
-                </strong>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- =================================================
-             INFO
-        ================================================= -->
-
-        <aside class="info">
-
-
-            <div class="info-top">
-
-                <span id="stepNumber">
-                    STEP 01
-                </span>
-
-                <span>
-                    KNN
-                </span>
-
-            </div>
-
-
-            <h3 id="stepTitle">
-
-                Meet<br>
-                Q.
-
-            </h3>
-
-
-            <p
-                class="info-description"
-                id="stepDescription"
-            >
-
-                Q คือข้อมูลใหม่
-                ที่เรายังไม่รู้ว่าอยู่ในกลุ่มไหน
-                เราจะใช้ข้อมูล A–D
-                เพื่อช่วยตัดสินใจ
-
-            </p>
-
-
-            <!-- DISTANCES -->
-
-            <div class="distance-list">
-
-
-                <div
-                    class="distance-row"
-                    id="rowA"
-                >
-
-                    <span>A</span>
-
-                    <span>NORMAL</span>
-
-                    <span class="distance-value">
-                        1.00
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="distance-row"
-                    id="rowB"
-                >
-
-                    <span>B</span>
-
-                    <span>NORMAL</span>
-
-                    <span class="distance-value">
-                        1.00
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="distance-row risk"
-                    id="rowC"
-                >
-
-                    <span>C</span>
-
-                    <span>HIGH RISK</span>
-
-                    <span class="distance-value">
-                        5.00
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="distance-row risk"
-                    id="rowD"
-                >
-
-                    <span>D</span>
-
-                    <span>HIGH RISK</span>
-
-                    <span class="distance-value">
-                        5.00
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- CONTROL -->
-
-            <div class="control">
-
-
-                <div class="control-label">
-                    NUMBER OF NEIGHBORS
-                </div>
-
-
-                <div class="k-top">
-
-                    <div
-                        class="k-number"
-                        id="kNumber"
-                    >
-                        3
-                    </div>
-
-                    <div class="k-label">
-                        K<br>
-                        NEAREST
-                    </div>
-
-                </div>
-
-
-                <input
-                    id="kSlider"
-                    type="range"
-                    min="1"
-                    max="4"
-                    value="3"
-                >
-
-
-                <button
-                    class="action"
-                    id="nextBtn"
-                >
-                    MEASURE DISTANCE →
-                </button>
-
-
-                <button
-                    class="reset"
-                    id="resetBtn"
-                >
-                    RESET
-                </button>
-
-            </div>
-
-        </aside>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     MATH
-========================================================= -->
-
-<section class="math">
-
-
-    <div class="math-grid">
-
-
-        <div>
-
-            <div class="hero-kicker">
-                THE MATH
-            </div>
-
-            <div class="math-title">
-
-                JUST<br>
-                <span>DISTANCE.</span>
-
-            </div>
-
-        </div>
-
-
-        <div>
-
-
-            <div class="formula-box">
-
-                <div class="formula-label">
-                    EUCLIDEAN DISTANCE
-                </div>
-
-
-                <div class="formula">
-
-                    d(P,Q) =
-
-                    <strong>
-                        √[(p₁−q₁)² + (p₂−q₂)²]
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <p class="math-copy">
-
-                สำหรับ Q = (2,2)
-
-                <br><br>
-
-                A → 1.00<br>
-                B → 1.00<br>
-                C → 5.00<br>
-                D → 5.00
-
-                <br><br>
-
-                ยิ่งระยะน้อย
-                หมายถึงยิ่งอยู่ใกล้ Q
-
+                ดูว่าเพื่อนบ้าน K ตัว
+                อยู่ในกลุ่มใดมากที่สุด
+                กลุ่มนั้นจะเป็นผลการทำนาย
             </p>
 
         </div>
 
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     VOTE
-========================================================= -->
-
-<section class="vote-section">
-
-
-    <div class="vote-heading">
-
-        <div class="hero-kicker">
-            MAJORITY VOTE
-        </div>
-
-
-        <h2>
-
-            LET THEM<br>
-            VOTE.
-
-        </h2>
-
-
-        <p>
-
-            กำหนด K = 3
-            เราจึงใช้เพื่อนบ้านที่ใกล้ที่สุด 3 จุด
-            แล้วนับว่า class ไหนมีเสียงมากกว่า
-
-        </p>
 
     </div>
 
 
-    <div class="votes">
+    <!-- FORMULA -->
 
+    <div class="formula-section">
 
-        <div class="vote-card normal">
-
-            <div class="vote-name">
-                NORMAL
-            </div>
-
-
-            <div class="vote-number">
-                2
-            </div>
-
-
-            <div class="vote-bar">
-
-                <div
-                    id="normalFill"
-                    class="vote-fill blue"
-                ></div>
-
-            </div>
-
-
-            <div class="vote-detail">
-                A + B
-            </div>
-
+        <div class="formula-title">
+            EUCLIDEAN DISTANCE
         </div>
 
+        <div class="formula">
+            d(P,Q) = √ Σ (pᵢ − qᵢ)²
+        </div>
 
-        <div class="vote-card risk">
-
-            <div class="vote-name">
-                HIGH RISK
-            </div>
-
-
-            <div class="vote-number">
-                1
-            </div>
-
-
-            <div class="vote-bar">
-
-                <div
-                    id="riskFill"
-                    class="vote-fill pink"
-                ></div>
-
-            </div>
-
-
-            <div class="vote-detail">
-                C หรือ D
-            </div>
-
+        <div class="formula-description">
+            สำหรับข้อมูล 2 คุณลักษณะ
+            จะคำนวณระยะห่างจาก X₁ และ X₂
         </div>
 
     </div>
 
 </section>
-
-
-
-<!-- =====================================================
-     FINAL
-========================================================= -->
-
-<section class="final">
-
-
-    <div class="final-content">
-
-
-        <div class="final-small">
-            FINAL PREDICTION / K = 3
-        </div>
-
-
-        <h2>
-
-            <span>NORMAL</span>
-
-        </h2>
-
-
-        <div class="final-proof">
-
-
-            <div class="proof blue">
-                2
-            </div>
-
-
-            <div class="vs">
-                VS
-            </div>
-
-
-            <div class="proof pink">
-                1
-            </div>
-
-        </div>
-
-
-        <p class="final-text">
-
-            <strong style="color:#6d8cff;">
-                2 NORMAL
-            </strong>
-
-            มากกว่า
-
-            <strong style="color:#ff7184;">
-                1 HIGH RISK
-            </strong>
-
-            <br>
-
-            ดังนั้น KNN จึงจัด
-
-            <strong style="color:#fff;">
-                Q = (2,2)
-            </strong>
-
-            ให้อยู่ในกลุ่ม
-
-            <strong style="color:#6d8cff;">
-                “ปกติ”
-            </strong>
-
-        </p>
-
-    </div>
-
-</section>
-
 
 
 <footer>
 
-    <span>
-        KNN / INTERACTIVE ML
-    </span>
+    <div>
+        KNN / INTERACTIVE VISUALIZATION
+    </div>
 
-    <span>
-        EUCLIDEAN DISTANCE · MAJORITY VOTE
-    </span>
+    <div>
+        A(1,2) · B(2,3) · C(5,6) · D(6,5) · Q(2,2)
+    </div>
 
 </footer>
 
 
-
 <script>
 
-/* =========================================================
-   STATE
-========================================================= */
+/* ==========================================
+   KNN INTERACTION
+========================================== */
 
-let step = 1;
+const startBtn = document.getElementById("startBtn");
+const graph = document.getElementById("graph");
 
-let K = 3;
+let running = false;
 
+startBtn.addEventListener("click", () => {
 
-/* =========================================================
-   ELEMENTS
-========================================================= */
+    running = !running;
 
-const nextBtn =
-    document.getElementById("nextBtn");
+    if(running){
 
-const resetBtn =
-    document.getElementById("resetBtn");
+        graph.classList.add("running");
 
-const slider =
-    document.getElementById("kSlider");
-
-const kNumber =
-    document.getElementById("kNumber");
-
-const stepNumber =
-    document.getElementById("stepNumber");
-
-const stepTitle =
-    document.getElementById("stepTitle");
-
-const stepDescription =
-    document.getElementById("stepDescription");
-
-const radius =
-    document.getElementById("radius");
-
-const tie =
-    document.getElementById("tie");
-
-
-const lines = {
-
-    A:document.getElementById("lineA"),
-    B:document.getElementById("lineB"),
-    C:document.getElementById("lineC"),
-    D:document.getElementById("lineD")
-
-};
-
-
-const labels = {
-
-    A:document.getElementById("distA"),
-    B:document.getElementById("distB"),
-    C:document.getElementById("distC"),
-    D:document.getElementById("distD")
-
-};
-
-
-const rows = {
-
-    A:document.getElementById("rowA"),
-    B:document.getElementById("rowB"),
-    C:document.getElementById("rowC"),
-    D:document.getElementById("rowD")
-
-};
-
-
-
-/* =========================================================
-   SLIDER
-========================================================= */
-
-slider.addEventListener("input",()=>{
-
-    K = Number(slider.value);
-
-    kNumber.textContent = K;
-
-    if(step === 3){
-
-        updateStep();
-
-    }
-
-});
-
-
-
-/* =========================================================
-   CLEAR
-========================================================= */
-
-function clearVisual(){
-
-    Object.values(lines).forEach(el=>{
-
-        el.classList.remove("show");
-        el.classList.remove("selected");
-
-    });
-
-
-    Object.values(labels).forEach(el=>{
-
-        el.classList.remove("show");
-
-    });
-
-
-    Object.values(rows).forEach(el=>{
-
-        el.classList.remove("active");
-
-    });
-
-
-    radius.classList.remove("show");
-
-    radius.setAttribute("r","0");
-
-    tie.classList.remove("show");
-
-}
-
-
-
-/* =========================================================
-   UPDATE STEP
-========================================================= */
-
-function updateStep(){
-
-    clearVisual();
-
-
-    stepNumber.textContent =
-        `STEP ${String(step).padStart(2,"0")}`;
-
-
-    /* ===============================================
-       STEP 1
-    =============================================== */
-
-    if(step === 1){
-
-        stepTitle.innerHTML =
-            "Meet<br>Q.";
-
-        stepDescription.innerHTML =
-            "Q คือข้อมูลใหม่ " +
-            "ที่เรายังไม่รู้ว่าอยู่ในกลุ่มไหน " +
-            "เราจะใช้ข้อมูล A–D " +
-            "เพื่อช่วยตัดสินใจ";
-
-        nextBtn.textContent =
-            "MEASURE DISTANCE →";
-
-    }
-
-
-    /* ===============================================
-       STEP 2
-    =============================================== */
-
-    if(step === 2){
-
-        stepTitle.innerHTML =
-            "Measure<br>distance.";
-
-        stepDescription.innerHTML =
-            "KNN วัดระยะจาก Q " +
-            "ไปยังข้อมูลทุกจุด " +
-            "เพื่อดูว่าใครอยู่ใกล้ที่สุด";
-
-        nextBtn.textContent =
-            "FIND THE NEAREST →";
-
-
-        ["A","B","C","D"].forEach(
-            (key,index)=>{
-
-                setTimeout(()=>{
-
-                    lines[key]
-                        .classList.add("show");
-
-                    labels[key]
-                        .classList.add("show");
-
-                    rows[key]
-                        .classList.add("active");
-
-                },index*180);
-
-            }
-        );
-
-    }
-
-
-    /* ===============================================
-       STEP 3
-    =============================================== */
-
-    if(step === 3){
-
-        stepTitle.innerHTML =
-            "Choose<br>K = " + K + ".";
-
-        stepDescription.innerHTML =
-            "เลือกเพื่อนบ้านที่ใกล้ที่สุด " +
-            K + " จุด";
-
-        nextBtn.textContent =
-            "LET THEM VOTE →";
-
-
-        Object.values(lines).forEach(el=>{
-
-            el.classList.add("show");
-
-        });
-
-
-        Object.values(labels).forEach(el=>{
-
-            el.classList.add("show");
-
-        });
-
-
-        rows.A.classList.add("active");
-        rows.B.classList.add("active");
-
-
-        if(K >= 3){
-
-            rows.C.classList.add("active");
-
-            lines.C.classList.add("selected");
-
-        }
-
-
-        if(K >= 4){
-
-            rows.D.classList.add("active");
-
-            lines.D.classList.add("selected");
-
-        }
-
-
-        if(K === 3){
-
-            radius.setAttribute(
-                "r",
-                "255"
-            );
-
-            radius.classList.add("show");
-
-            tie.classList.add("show");
-
-        }
-
-    }
-
-
-    /* ===============================================
-       STEP 4
-    =============================================== */
-
-    if(step === 4){
-
-        stepTitle.innerHTML =
-            "Let them<br>vote.";
-
-        stepDescription.innerHTML =
-            "A และ B เป็น NORMAL " +
-            "จึงได้ 2 เสียง " +
-            "ส่วน C หรือ D ได้ 1 เสียง";
-
-        nextBtn.textContent =
-            "SHOW RESULT →";
-
-
-        rows.A.classList.add("active");
-        rows.B.classList.add("active");
-
-        if(K >= 3){
-
-            rows.C.classList.add("active");
-
-        }
-
-        if(K >= 4){
-
-            rows.D.classList.add("active");
-
-        }
-
-
-        setTimeout(()=>{
-
-            document.getElementById(
-                "normalFill"
-            ).style.width = "66%";
-
-            document.getElementById(
-                "riskFill"
-            ).style.width = "33%";
-
-        },200);
-
-    }
-
-
-    /* ===============================================
-       STEP 5
-    =============================================== */
-
-    if(step === 5){
-
-        stepTitle.innerHTML =
-            "Decision<br>made.";
-
-        stepDescription.innerHTML =
-            "เสียงส่วนใหญ่เป็น NORMAL " +
-            "ดังนั้น Q = (2,2) " +
-            "จึงถูกจัดเป็น “ปกติ”";
-
-        nextBtn.textContent =
-            "RESTART ↻";
-
-
-        document.getElementById(
-            "normalFill"
-        ).style.width = "66%";
-
-        document.getElementById(
-            "riskFill"
-        ).style.width = "33%";
-
-    }
-
-}
-
-
-
-/* =========================================================
-   NEXT
-========================================================= */
-
-nextBtn.addEventListener("click",()=>{
-
-    if(step < 5){
-
-        step++;
+        startBtn.innerHTML = "กำลังคำนวณ ✓";
 
     }else{
 
-        step = 1;
+        graph.classList.remove("running");
 
-        document.getElementById(
-            "normalFill"
-        ).style.width = "0";
-
-        document.getElementById(
-            "riskFill"
-        ).style.width = "0";
-
-    }
-
-    updateStep();
-
-});
-
-
-
-/* =========================================================
-   RESET
-========================================================= */
-
-resetBtn.addEventListener("click",()=>{
-
-    step = 1;
-
-    K = 3;
-
-    slider.value = 3;
-
-    kNumber.textContent = 3;
-
-    document.getElementById(
-        "normalFill"
-    ).style.width = "0";
-
-    document.getElementById(
-        "riskFill"
-    ).style.width = "0";
-
-    updateStep();
-
-});
-
-
-
-/* =========================================================
-   SPACEBAR
-========================================================= */
-
-document.addEventListener("keydown",(e)=>{
-
-    if(e.code === "Space"){
-
-        e.preventDefault();
-
-        nextBtn.click();
+        startBtn.innerHTML = "เริ่มการคำนวณ →";
 
     }
 
 });
 
 
-/* =========================================================
-   INIT
-========================================================= */
+/* ==========================================
+   DISTANCE LINE CALCULATION
+========================================== */
 
-updateStep();
+function centerOf(selector){
+
+    const el = document.querySelector(selector);
+
+    const graphRect = graph.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+
+    return {
+
+        x:
+            rect.left
+            - graphRect.left
+            + rect.width / 2,
+
+        y:
+            rect.top
+            - graphRect.top
+            + rect.height / 2
+
+    };
+
+}
+
+
+function connect(lineSelector, pointSelector){
+
+    const line =
+        document.querySelector(lineSelector);
+
+    const q =
+        centerOf(".point-q");
+
+    const p =
+        centerOf(pointSelector);
+
+    const dx = p.x - q.x;
+    const dy = p.y - q.y;
+
+    const distance =
+        Math.sqrt(dx * dx + dy * dy);
+
+    const angle =
+        Math.atan2(dy,dx)
+        * 180 / Math.PI;
+
+    line.style.left = q.x + "px";
+    line.style.top = q.y + "px";
+
+    line.style.width = distance + "px";
+
+    line.style.transform =
+        `rotate(${angle}deg)`;
+
+}
+
+
+/* draw */
+
+function drawLines(){
+
+    connect("#lineA",".point-a");
+    connect("#lineB",".point-b");
+    connect("#lineC",".point-c");
+    connect("#lineD",".point-d");
+
+}
+
+window.addEventListener(
+    "load",
+    drawLines
+);
+
+window.addEventListener(
+    "resize",
+    drawLines
+);
+
+
+/* ==========================================
+   KEYBOARD INTERACTION
+========================================== */
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        if(event.code === "Space"){
+
+            event.preventDefault();
+
+            startBtn.click();
+
+        }
+
+    }
+);
 
 </script>
 
 </body>
 </html>
-```

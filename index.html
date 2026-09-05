@@ -1,26 +1,38 @@
-```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>KNN — Interactive ML Lab</title>
+<title>KNN — Nearest Neighbors</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+:root{
+    --bg:#0b0d12;
+    --panel:#11141b;
+    --panel2:#161a22;
+    --text:#f5f5f2;
+    --muted:#858b99;
+    --faint:#3b414d;
 
-/* =========================================================
-   RESET
-========================================================= */
+    --blue:#7c9cff;
+    --blue2:#b5c5ff;
+
+    --red:#ff7279;
+    --red2:#ffc0c3;
+
+    --gold:#ffd66b;
+
+    --border:rgba(255,255,255,.09);
+}
 
 *{
+    box-sizing:border-box;
     margin:0;
     padding:0;
-    box-sizing:border-box;
 }
 
 html{
@@ -28,355 +40,277 @@ html{
 }
 
 body{
-    font-family:Inter, sans-serif;
-    background:#07090d;
-    color:#f4f7fb;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Manrope,sans-serif;
     overflow-x:hidden;
 }
 
-button{
+button,
+input{
     font-family:inherit;
 }
 
 
-/* =========================================================
+/* =====================================================
    BACKGROUND
-========================================================= */
+===================================================== */
 
-body::before{
-    content:"";
+.noise{
     position:fixed;
     inset:0;
     pointer-events:none;
-    background:
-        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
-    background-size:60px 60px;
-    mask-image:linear-gradient(to bottom,black,transparent 85%);
-    z-index:-2;
-}
+    z-index:100;
+    opacity:.035;
 
-body::after{
-    content:"";
-    position:fixed;
-    width:600px;
-    height:600px;
-    left:-250px;
-    top:10%;
-    border-radius:50%;
-    background:rgba(79,124,255,.08);
-    filter:blur(120px);
-    pointer-events:none;
-    z-index:-3;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
 }
 
 
-/* =========================================================
+/* =====================================================
    NAV
-========================================================= */
+===================================================== */
 
-nav{
-    height:78px;
-    padding:0 5vw;
+.nav{
+    height:76px;
+    padding:0 4.5vw;
 
     display:flex;
     align-items:center;
     justify-content:space-between;
 
-    border-bottom:1px solid rgba(255,255,255,.08);
-
-    position:relative;
-    z-index:10;
-
-    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
 }
 
-.brand{
+.nav-left{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:15px;
 
-    font-family:"IBM Plex Mono",monospace;
-    font-size:12px;
+    font-family:"Space Mono",monospace;
+    font-size:11px;
     letter-spacing:.08em;
 }
 
-.brand-mark{
-    width:30px;
-    height:30px;
-    border:1px solid #4f7cff;
-    border-radius:9px;
+.logo{
+    width:34px;
+    height:34px;
 
     display:grid;
     place-items:center;
 
-    box-shadow:
-        0 0 20px rgba(79,124,255,.25);
-}
-
-.nav-status{
-    display:flex;
-    gap:20px;
-    align-items:center;
-
-    font-family:"IBM Plex Mono",monospace;
-    font-size:10px;
-    color:#6e7685;
-}
-
-.live{
-    width:7px;
-    height:7px;
+    border:1px solid var(--blue);
     border-radius:50%;
-    background:#65e6a7;
 
-    box-shadow:0 0 12px #65e6a7;
+    color:var(--blue);
+
+    box-shadow:
+        0 0 30px rgba(124,156,255,.15);
+}
+
+.nav-right{
+    display:flex;
+    gap:28px;
+
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+    color:#5f6673;
+}
+
+.nav-right span:first-child{
+    color:#8994a5;
 }
 
 
-/* =========================================================
+/* =====================================================
    HERO
-========================================================= */
+===================================================== */
 
 .hero{
-    min-height:calc(100vh - 78px);
+    min-height:calc(100vh - 76px);
 
-    padding:100px 7vw;
+    padding:8vh 7vw;
+
+    position:relative;
 
     display:flex;
     flex-direction:column;
     justify-content:center;
-
-    position:relative;
 }
 
-.hero-small{
-    color:#687080;
+.hero-number{
+    position:absolute;
+    right:6vw;
+    top:9vh;
 
-    font-family:"IBM Plex Mono",monospace;
-    font-size:11px;
-    letter-spacing:.16em;
+    font-family:"Space Mono",monospace;
+    font-size:10px;
 
-    margin-bottom:28px;
+    color:#4c5360;
+}
+
+.hero-kicker{
+    color:#6e7684;
+
+    font-family:"Space Mono",monospace;
+    font-size:10px;
+    letter-spacing:.2em;
+
+    margin-bottom:30px;
 }
 
 .hero h1{
-    font-size:clamp(70px,11vw,170px);
+    font-size:clamp(65px,11vw,165px);
+
     line-height:.82;
 
     letter-spacing:-.09em;
-    font-weight:800;
 
     max-width:1100px;
 }
 
-.hero h1 .blue{
-    color:#5a82ff;
-
-    text-shadow:
-        0 0 50px rgba(90,130,255,.25);
+.hero h1 em{
+    color:var(--blue);
+    font-style:normal;
 }
 
-.hero-bottom{
-    margin-top:65px;
+.hero-sub{
+    margin-top:55px;
 
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
+    max-width:500px;
 
-    max-width:1100px;
-}
+    color:#858c99;
 
-.hero-description{
-    max-width:520px;
-
-    font-size:18px;
-    line-height:1.7;
-
-    color:#8b93a2;
-}
-
-.hero-description strong{
-    color:white;
-}
-
-.hero-arrow{
-    width:55px;
-    height:55px;
-
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:50%;
-
-    display:grid;
-    place-items:center;
-
-    color:#8c95a5;
-}
-
-
-/* =========================================================
-   SECTION COMMON
-========================================================= */
-
-.section{
-    padding:120px 5vw;
-}
-
-.section-label{
-    font-family:"IBM Plex Mono",monospace;
-    color:#657082;
-    font-size:10px;
-    letter-spacing:.16em;
-    margin-bottom:20px;
-}
-
-
-/* =========================================================
-   CONCEPT
-========================================================= */
-
-.concept{
-    padding:100px 7vw 130px;
-
-    border-top:1px solid rgba(255,255,255,.08);
-}
-
-.concept-grid{
-    display:grid;
-    grid-template-columns:.7fr 1.3fr;
-    gap:10vw;
-}
-
-.concept-title{
-    font-size:clamp(40px,5vw,70px);
-    line-height:.95;
-    letter-spacing:-.06em;
-}
-
-.concept-copy{
-    max-width:700px;
-}
-
-.concept-copy p{
-    color:#929aa8;
-    font-size:20px;
+    font-size:17px;
     line-height:1.8;
 }
 
-.concept-copy strong{
-    color:white;
-}
-
-.flow{
-    margin-top:45px;
-
-    display:flex;
-    align-items:center;
-    gap:12px;
-
-    flex-wrap:wrap;
-}
-
-.flow-item{
-    padding:10px 15px;
-
-    border:1px solid rgba(255,255,255,.1);
-    border-radius:100px;
-
-    font-family:"IBM Plex Mono",monospace;
-    font-size:10px;
-    color:#9da5b2;
-}
-
-.flow-arrow{
-    color:#48505d;
+.hero-sub b{
+    color:#fff;
 }
 
 
-/* =========================================================
-   LAB
-========================================================= */
+/* =====================================================
+   CONCEPT STRIP
+===================================================== */
 
-.lab{
-    padding:100px 4vw 120px;
+.concept-strip{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
 
-    background:
-        radial-gradient(circle at 50% 0%,
-        rgba(66,105,220,.12),
-        transparent 45%);
-
-    border-top:1px solid rgba(255,255,255,.08);
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
 }
 
-.lab-header{
+.concept-item{
+    padding:32px 5vw;
+
+    border-right:1px solid var(--border);
+}
+
+.concept-item:last-child{
+    border-right:0;
+}
+
+.concept-num{
+    color:#555c69;
+
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+
+    margin-bottom:15px;
+}
+
+.concept-item h3{
+    font-size:17px;
+    font-weight:600;
+
+    margin-bottom:7px;
+}
+
+.concept-item p{
+    color:#707784;
+    font-size:12px;
+    line-height:1.6;
+}
+
+
+/* =====================================================
+   LAB INTRO
+===================================================== */
+
+.lab-intro{
+    padding:120px 7vw 70px;
+
     display:flex;
     justify-content:space-between;
     align-items:flex-end;
-
-    margin:0 2vw 40px;
 }
 
-.lab-title{
-    font-size:clamp(38px,5vw,75px);
-    letter-spacing:-.065em;
-    line-height:.9;
+.lab-intro h2{
+    font-size:clamp(50px,7vw,105px);
+
+    letter-spacing:-.08em;
+    line-height:.8;
 }
 
-.lab-title span{
-    color:#667080;
+.lab-intro h2 span{
+    color:#555c68;
 }
 
-.step-counter{
-    font-family:"IBM Plex Mono",monospace;
-    font-size:11px;
-    color:#687182;
+.lab-desc{
+    max-width:330px;
+
+    color:#7e8693;
+
+    font-size:13px;
+    line-height:1.8;
 }
 
 
-/* =========================================================
-   MAIN LAB GRID
-========================================================= */
+/* =====================================================
+   LAB
+===================================================== */
 
-.lab-grid{
+.lab{
+    margin:0 3vw 120px;
+
+    min-height:750px;
+
+    border:1px solid var(--border);
+    border-radius:28px;
+
+    background:
+        radial-gradient(
+            circle at 40% 45%,
+            rgba(83,112,220,.11),
+            transparent 38%
+        ),
+        #0e1117;
+
     display:grid;
-    grid-template-columns:minmax(0,1fr) 370px;
-
-    min-height:700px;
-
-    border:1px solid rgba(255,255,255,.1);
-    border-radius:30px;
+    grid-template-columns:minmax(0,1fr) 350px;
 
     overflow:hidden;
 
-    background:rgba(255,255,255,.025);
-
     box-shadow:
-        0 30px 100px rgba(0,0,0,.45);
+        0 50px 120px rgba(0,0,0,.45);
 }
 
 
-/* =========================================================
-   VISUALIZATION
-========================================================= */
+/* =====================================================
+   VISUAL AREA
+===================================================== */
 
 .visual{
     position:relative;
 
-    min-height:700px;
-
-    background:
-        radial-gradient(
-            circle at 50% 50%,
-            rgba(65,105,225,.07),
-            transparent 55%
-        );
+    min-height:750px;
 
     overflow:hidden;
 }
 
-.visual::before{
-    content:"";
-
+.visual-grid{
     position:absolute;
     inset:0;
 
@@ -384,71 +318,66 @@ nav{
         linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
         linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
 
-    background-size:70px 70px;
+    background-size:60px 60px;
 
-    mask-image:radial-gradient(circle,black,transparent 85%);
+    mask-image:
+        radial-gradient(
+            circle at center,
+            black 0%,
+            transparent 82%
+        );
 }
 
-.coordinate{
+.corner{
     position:absolute;
 
-    font-family:"IBM Plex Mono",monospace;
+    font-family:"Space Mono",monospace;
+    font-size:8px;
+
+    color:#4c5360;
+}
+
+.corner.tl{
+    top:25px;
+    left:25px;
+}
+
+.corner.br{
+    right:25px;
+    bottom:25px;
+}
+
+
+/* =====================================================
+   GRAPH SVG
+===================================================== */
+
+svg{
+    position:absolute;
+
+    width:100%;
+    height:100%;
+
+    inset:0;
+}
+
+.axis{
+    stroke:#343a45;
+    stroke-width:1;
+}
+
+.axis-text{
+    fill:#4e5561;
+
+    font-family:"Space Mono",monospace;
     font-size:9px;
-
-    color:#4e5765;
 }
 
-.xaxis{
-    bottom:30px;
-    left:50px;
-    right:50px;
-
-    height:1px;
-
-    background:rgba(255,255,255,.1);
-}
-
-.yaxis{
-    top:30px;
-    bottom:30px;
-    left:50px;
-
-    width:1px;
-
-    background:rgba(255,255,255,.1);
-}
-
-.xtext{
-    bottom:12px;
-    right:45px;
-}
-
-.ytext{
-    top:12px;
-    left:38px;
-}
-
-
-/* =========================================================
-   SVG GRAPH
-========================================================= */
-
-.graph-svg{
-    position:absolute;
-
-    inset:30px 50px 40px 50px;
-
-    width:calc(100% - 100px);
-    height:calc(100% - 70px);
-
-    overflow:visible;
-}
-
-.distance-line{
-    stroke:#667080;
+.line{
+    stroke:#606875;
     stroke-width:1.5;
 
-    stroke-dasharray:6 8;
+    stroke-dasharray:7 8;
 
     opacity:0;
 
@@ -458,323 +387,346 @@ nav{
         stroke-width .5s;
 }
 
-.distance-line.visible{
+.line.show{
     opacity:1;
 }
 
-.distance-line.selected{
-    stroke:#6d8dff;
+.line.selected{
+    stroke:var(--blue);
     stroke-width:2.5;
-    stroke-dasharray:5 5;
 }
 
-.distance-label{
-    fill:#8993a3;
+.dist{
+    fill:#89919e;
 
-    font-family:"IBM Plex Mono",monospace;
-
-    font-size:13px;
+    font-family:"Space Mono",monospace;
+    font-size:11px;
 
     opacity:0;
 
-    transition:opacity .5s;
+    transition:.4s;
 }
 
-.distance-label.visible{
+.dist.show{
     opacity:1;
 }
 
-.point{
-    transition:transform .7s cubic-bezier(.2,.8,.2,1);
-}
 
-.point-core{
-    stroke:#090b10;
+/* =====================================================
+   DATA POINTS
+===================================================== */
+
+.dot{
+    stroke:#080a0e;
     stroke-width:5;
+
+    transition:
+        transform .6s,
+        opacity .5s;
 }
 
-.normal-point{
-    fill:#5e86ff;
-    filter:drop-shadow(0 0 14px rgba(94,134,255,.65));
+.normal-dot{
+    fill:var(--blue);
+    filter:
+        drop-shadow(0 0 10px rgba(124,156,255,.7));
 }
 
-.risk-point{
-    fill:#ff626b;
-    filter:drop-shadow(0 0 14px rgba(255,98,107,.6));
+.risk-dot{
+    fill:var(--red);
+    filter:
+        drop-shadow(0 0 10px rgba(255,114,121,.65));
 }
 
-.query-point{
-    fill:#f5c85b;
-    filter:drop-shadow(0 0 18px rgba(245,200,91,.8));
+.q-dot{
+    fill:var(--gold);
+    filter:
+        drop-shadow(0 0 18px rgba(255,214,107,.8));
 }
 
-.point-name{
-    fill:#e8ebf0;
+.name{
+    fill:#e8ebef;
 
-    font-family:"IBM Plex Mono",monospace;
+    font-family:"Space Mono",monospace;
 
-    font-size:13px;
-    font-weight:600;
+    font-size:12px;
+    font-weight:700;
 }
 
-.point-info{
-    fill:#646d7b;
+.coord{
+    fill:#59616e;
 
-    font-family:"IBM Plex Mono",monospace;
+    font-family:"Space Mono",monospace;
 
     font-size:9px;
 }
 
 
-/* =========================================================
-   QUERY PULSE
-========================================================= */
+/* =====================================================
+   Q RINGS
+===================================================== */
 
-.pulse{
+.q-ring{
     fill:none;
-    stroke:#f5c85b;
+
+    stroke:var(--gold);
     stroke-width:1;
 
-    opacity:.7;
+    opacity:.4;
 
-    transform-origin:200px 400px;
+    transform-origin:200px 410px;
 
-    animation:pulse 2.2s infinite;
+    animation:qPulse 2.5s infinite;
 }
 
-@keyframes pulse{
+.q-ring.r2{
+    animation-delay:.8s;
+}
+
+.q-ring.r3{
+    animation-delay:1.6s;
+}
+
+@keyframes qPulse{
 
     0%{
-        transform:scale(.7);
-        opacity:.7;
+        transform:scale(.5);
+        opacity:.55;
     }
 
-    70%{
+    75%{
         transform:scale(2.5);
         opacity:0;
     }
 
     100%{
-        transform:scale(2.5);
         opacity:0;
     }
 
 }
 
 
-/* =========================================================
-   RADIUS
-========================================================= */
+/* =====================================================
+   K RADIUS
+===================================================== */
 
 .radius{
-    fill:rgba(94,134,255,.045);
+    fill:rgba(124,156,255,.045);
 
-    stroke:#5e86ff;
+    stroke:var(--blue);
     stroke-width:1.5;
 
-    stroke-dasharray:8 9;
+    stroke-dasharray:8 8;
 
     opacity:0;
 
-    transition:
-        opacity .8s,
-        r .8s;
+    transition:.8s;
 }
 
-.radius.visible{
+.radius.show{
     opacity:1;
 }
 
 
-/* =========================================================
-   TIE LABEL
-========================================================= */
+/* =====================================================
+   TIE
+===================================================== */
 
-.tie-label{
+.tie{
     position:absolute;
 
-    top:23%;
-    right:14%;
+    right:8%;
+    top:17%;
 
-    padding:9px 13px;
+    padding:10px 15px;
 
     border:1px solid rgba(255,255,255,.1);
     border-radius:100px;
 
-    background:rgba(10,12,17,.75);
+    background:rgba(12,14,19,.75);
 
-    backdrop-filter:blur(15px);
+    backdrop-filter:blur(14px);
 
-    font-family:"IBM Plex Mono",monospace;
+    font-family:"Space Mono",monospace;
+
     font-size:9px;
 
-    color:#8b95a5;
+    color:#69717e;
 
     opacity:0;
+
     transform:translateY(10px);
 
     transition:.5s;
 }
 
-.tie-label.show{
+.tie.show{
     opacity:1;
     transform:translateY(0);
 }
 
-.tie-label b{
-    color:#fff;
+.tie strong{
+    color:#e7e9ed;
 }
 
 
-/* =========================================================
+/* =====================================================
    SIDE PANEL
-========================================================= */
+===================================================== */
 
 .panel{
-    padding:34px;
+    border-left:1px solid var(--border);
 
-    border-left:1px solid rgba(255,255,255,.08);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.012)
+        );
 
-    background:rgba(8,10,14,.72);
-
-    backdrop-filter:blur(20px);
+    padding:32px;
 
     display:flex;
     flex-direction:column;
 }
 
-.panel-top{
+.panel-head{
     display:flex;
     justify-content:space-between;
 
-    font-family:"IBM Plex Mono",monospace;
+    color:#5e6673;
+
+    font-family:"Space Mono",monospace;
     font-size:9px;
-
-    color:#606a79;
 }
 
-.panel-title{
-    font-size:40px;
-    line-height:.95;
-    letter-spacing:-.055em;
+.panel h3{
+    margin-top:38px;
 
-    margin-top:30px;
+    font-size:38px;
+
+    line-height:.92;
+
+    letter-spacing:-.065em;
 }
 
-.panel-text{
-    margin-top:20px;
+.panel-description{
+    margin-top:18px;
 
-    color:#858e9d;
+    color:#7e8693;
 
-    font-size:14px;
-    line-height:1.7;
+    font-size:13px;
+    line-height:1.75;
 }
 
 
-/* =========================================================
+/* =====================================================
    DISTANCE LIST
-========================================================= */
+===================================================== */
 
-.distances{
-    margin-top:35px;
+.distance-list{
+    margin-top:32px;
 
-    border-top:1px solid rgba(255,255,255,.08);
+    border-top:1px solid var(--border);
 }
 
-.distance-row{
+.d-row{
     display:grid;
-    grid-template-columns:35px 1fr auto;
-
-    align-items:center;
+    grid-template-columns:30px 1fr auto;
 
     padding:15px 0;
 
-    border-bottom:1px solid rgba(255,255,255,.06);
+    border-bottom:1px solid rgba(255,255,255,.055);
 
-    font-family:"IBM Plex Mono",monospace;
-    font-size:11px;
+    color:#666e7c;
 
-    color:#6e7785;
+    font-family:"Space Mono",monospace;
+    font-size:10px;
 
     transition:.3s;
 }
 
-.distance-row.active{
-    color:white;
+.d-row.active{
+    color:#e9ebef;
 }
 
-.distance-row.active .dist-value{
-    color:#6d8dff;
+.d-row.active .value{
+    color:var(--blue);
 }
 
-.distance-row.tie .dist-value{
-    color:#ff737b;
-}
-
-.dist-value{
-    color:#88919f;
+.d-row.risk .value{
+    color:var(--red);
 }
 
 
-/* =========================================================
-   K CONTROL
-========================================================= */
+/* =====================================================
+   K
+===================================================== */
 
-.k-control{
+.k-box{
     margin-top:auto;
 
     padding-top:30px;
 }
 
-.k-caption{
-    font-family:"IBM Plex Mono",monospace;
-    color:#606a79;
+.k-label{
+    color:#5e6672;
+
+    font-family:"Space Mono",monospace;
+
     font-size:9px;
+
     margin-bottom:10px;
 }
 
-.k-value{
+.k-top{
     display:flex;
+    align-items:flex-end;
     justify-content:space-between;
-    align-items:center;
-
-    margin-bottom:15px;
 }
 
 .k-number{
-    font-size:58px;
-    line-height:.8;
+    font-size:70px;
+    font-weight:700;
 
-    letter-spacing:-.08em;
+    line-height:.75;
+
+    letter-spacing:-.1em;
 }
 
-.k-label{
-    color:#6e7785;
+.k-name{
+    color:#606875;
 
-    font-family:"IBM Plex Mono",monospace;
-    font-size:10px;
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+
+    line-height:1.5;
 }
 
-.k-slider{
+input[type=range]{
     width:100%;
 
-    accent-color:#5e86ff;
+    margin-top:25px;
+
+    accent-color:var(--blue);
 }
 
-.action{
+.main-btn{
     width:100%;
 
-    margin-top:22px;
+    margin-top:20px;
 
     padding:17px;
 
-    border:none;
-    border-radius:14px;
+    border:0;
 
-    background:#f2f5fa;
-    color:#090b10;
+    border-radius:12px;
 
-    font-size:13px;
+    background:#f1f3f7;
+
+    color:#0a0c10;
+
+    font-size:12px;
     font-weight:700;
 
     cursor:pointer;
@@ -782,237 +734,266 @@ nav{
     transition:.25s;
 }
 
-.action:hover{
+.main-btn:hover{
     transform:translateY(-2px);
 
     box-shadow:
-        0 12px 30px rgba(255,255,255,.1);
+        0 15px 35px rgba(255,255,255,.08);
 }
 
-.reset{
+.reset-btn{
     width:100%;
 
     margin-top:8px;
 
-    padding:13px;
+    padding:12px;
 
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid var(--border);
+
+    border-radius:10px;
 
     background:transparent;
-    color:#6f7886;
 
-    border-radius:12px;
+    color:#626a77;
+
+    font-size:10px;
 
     cursor:pointer;
 }
 
 
-/* =========================================================
-   RESULT SECTION
-========================================================= */
+/* =====================================================
+   EXPLANATION
+===================================================== */
 
-.result-section{
+.explain{
+    padding:0 7vw 130px;
+
+    display:grid;
+
+    grid-template-columns:.8fr 1.2fr;
+
+    gap:10vw;
+}
+
+.explain-title{
+    font-size:clamp(45px,6vw,80px);
+
+    line-height:.85;
+
+    letter-spacing:-.075em;
+}
+
+.explain-copy{
+    max-width:650px;
+}
+
+.formula-box{
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+
+    padding:30px 0;
+
+    font-family:"Space Mono",monospace;
+}
+
+.formula-label{
+    color:#555d69;
+    font-size:9px;
+
+    margin-bottom:15px;
+}
+
+.formula{
+    font-size:21px;
+}
+
+.formula span{
+    color:var(--blue);
+}
+
+.explain-copy p{
+    margin-top:28px;
+
+    color:#7d8592;
+
+    font-size:15px;
+    line-height:1.9;
+}
+
+
+/* =====================================================
+   FINAL
+===================================================== */
+
+.final{
+    min-height:80vh;
+
     padding:130px 7vw;
 
-    border-top:1px solid rgba(255,255,255,.08);
+    border-top:1px solid var(--border);
+
+    display:flex;
+    align-items:center;
 
     background:
         radial-gradient(
-            circle at 50% 0%,
-            rgba(94,134,255,.13),
-            transparent 45%
+            circle at 70% 50%,
+            rgba(88,121,230,.12),
+            transparent 35%
         );
 }
 
-.result-grid{
+.final-grid{
+    width:100%;
+
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8vw;
+    grid-template-columns:1.2fr .8fr;
+
+    gap:10vw;
+
     align-items:center;
 }
 
-.result-heading{
-    font-size:clamp(60px,8vw,125px);
-    line-height:.78;
+.final-kicker{
+    color:#5e6672;
 
-    letter-spacing:-.09em;
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+    letter-spacing:.16em;
+
+    margin-bottom:30px;
 }
 
-.result-heading span{
-    color:#5e86ff;
+.final h2{
+    font-size:clamp(70px,12vw,180px);
+
+    line-height:.75;
+
+    letter-spacing:-.1em;
+}
+
+.final h2 span{
+    color:var(--blue);
 
     text-shadow:
-        0 0 60px rgba(94,134,255,.25);
+        0 0 70px rgba(124,156,255,.25);
 }
 
-.result-copy{
-    color:#858e9c;
-    font-size:18px;
-    line-height:1.8;
+.final-text{
+    color:#818996;
+
+    font-size:16px;
+    line-height:1.9;
 }
 
-.proof{
+.vote-proof{
     margin-top:35px;
 
     display:flex;
-    gap:10px;
     align-items:center;
+    gap:12px;
 }
 
-.proof-number{
-    width:75px;
-    height:75px;
+.vote{
+    width:85px;
+    height:85px;
 
+    border:1px solid var(--border);
     border-radius:20px;
 
-    display:grid;
-    place-items:center;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
 
+    background:rgba(255,255,255,.025);
+}
+
+.vote strong{
     font-size:32px;
-    font-weight:700;
-
-    background:rgba(94,134,255,.1);
-
-    border:1px solid rgba(94,134,255,.2);
-
-    color:#6f91ff;
 }
 
-.proof-vs{
-    color:#525b69;
-    font-family:"IBM Plex Mono",monospace;
+.vote small{
+    font-family:"Space Mono",monospace;
+    font-size:8px;
+
+    margin-top:5px;
+    color:#646c79;
 }
 
-.proof-risk{
-    width:75px;
-    height:75px;
-
-    border-radius:20px;
-
-    display:grid;
-    place-items:center;
-
-    font-size:32px;
-    font-weight:700;
-
-    background:rgba(255,98,107,.08);
-
-    border:1px solid rgba(255,98,107,.18);
-
-    color:#ff737b;
+.vote.blue strong{
+    color:var(--blue);
 }
 
-
-/* =========================================================
-   DATA SECTION
-========================================================= */
-
-.data-section{
-    padding:120px 7vw;
-
-    background:#0b0d12;
-
-    border-top:1px solid rgba(255,255,255,.08);
+.vote.red strong{
+    color:var(--red);
 }
 
-.data-title{
-    font-size:clamp(45px,6vw,80px);
-    letter-spacing:-.07em;
-    margin-bottom:50px;
-}
-
-.data-table{
-    border-top:1px solid rgba(255,255,255,.15);
-}
-
-.data-row{
-    display:grid;
-    grid-template-columns:.5fr 1fr 1fr 1fr;
-
-    padding:22px 5px;
-
-    border-bottom:1px solid rgba(255,255,255,.07);
-
-    font-family:"IBM Plex Mono",monospace;
-    font-size:12px;
-
-    color:#7d8694;
-}
-
-.data-row.header{
-    color:#4e5765;
+.vs{
+    font-family:"Space Mono",monospace;
     font-size:9px;
-}
-
-.data-row .point-name-table{
-    color:#fff;
-}
-
-.normal-tag{
-    color:#6f91ff;
-}
-
-.risk-tag{
-    color:#ff737b;
+    color:#4c5460;
 }
 
 
-/* =========================================================
+/* =====================================================
    FOOTER
-========================================================= */
+===================================================== */
 
 footer{
-    padding:30px 7vw;
+    border-top:1px solid var(--border);
+
+    padding:25px 7vw;
 
     display:flex;
     justify-content:space-between;
 
-    border-top:1px solid rgba(255,255,255,.08);
+    color:#414853;
 
-    color:#454d59;
+    font-family:"Space Mono",monospace;
 
-    font-family:"IBM Plex Mono",monospace;
-    font-size:9px;
+    font-size:8px;
 }
 
 
-/* =========================================================
+/* =====================================================
    RESPONSIVE
-========================================================= */
+===================================================== */
 
-@media(max-width:1000px){
+@media(max-width:950px){
 
-    .lab-grid{
+    .lab{
         grid-template-columns:1fr;
     }
 
     .panel{
-        border-left:none;
-        border-top:1px solid rgba(255,255,255,.08);
-        min-height:600px;
+        border-left:0;
+        border-top:1px solid var(--border);
     }
 
     .visual{
         min-height:600px;
     }
 
-    .result-grid{
+    .final-grid{
         grid-template-columns:1fr;
     }
 
-    .result-copy{
-        max-width:600px;
+    .explain{
+        grid-template-columns:1fr;
+        gap:50px;
     }
 }
 
-
 @media(max-width:650px){
 
-    nav{
+    .nav{
         padding:0 20px;
     }
 
-    .nav-status{
+    .nav-right{
         display:none;
     }
 
@@ -1024,99 +1005,84 @@ footer{
         font-size:65px;
     }
 
-    .hero-bottom{
+    .hero-sub{
+        margin-top:40px;
+    }
+
+    .concept-strip{
+        grid-template-columns:1fr;
+    }
+
+    .concept-item{
+        border-right:0;
+        border-bottom:1px solid var(--border);
+    }
+
+    .lab-intro{
+        padding-left:25px;
+        padding-right:25px;
+
         display:block;
     }
 
-    .hero-arrow{
+    .lab-desc{
         margin-top:30px;
     }
 
-    .concept,
-    .section,
-    .result-section,
-    .data-section{
-        padding-left:25px;
-        padding-right:25px;
-    }
-
-    .concept-grid{
-        grid-template-columns:1fr;
-        gap:40px;
-    }
-
     .lab{
-        padding-left:15px;
-        padding-right:15px;
-    }
+        margin-left:10px;
+        margin-right:10px;
 
-    .lab-grid{
         border-radius:20px;
     }
 
     .visual{
-        min-height:480px;
+        min-height:500px;
     }
 
     .panel{
         padding:25px;
     }
 
-    .graph-svg{
-        inset:20px 20px 30px 35px;
-
-        width:calc(100% - 55px);
-        height:calc(100% - 50px);
-    }
-
-    .result-heading{
-        font-size:75px;
-    }
-
-    .data-row{
-        grid-template-columns:.6fr 1fr 1fr;
-    }
-
-    .data-row div:nth-child(4){
-        display:none;
-    }
-
-    footer{
+    .final{
         padding-left:25px;
         padding-right:25px;
     }
-}
 
+    .final h2{
+        font-size:78px;
+    }
+}
 </style>
 </head>
 
 
 <body>
 
+<div class="noise"></div>
+
 
 <!-- =====================================================
      NAV
 ===================================================== -->
 
-<nav>
+<nav class="nav">
 
-    <div class="brand">
+    <div class="nav-left">
 
-        <div class="brand-mark">
+        <div class="logo">
             K
         </div>
 
-        KNN / ML LAB
+        K-NEAREST NEIGHBORS
 
     </div>
 
 
-    <div class="nav-status">
+    <div class="nav-right">
 
-        <span class="live"></span>
-
-        INTERACTIVE VISUALIZATION
-
+        <span>INTERACTIVE</span>
+        <span>EUCLIDEAN DISTANCE</span>
         <span>2026</span>
 
     </div>
@@ -1131,35 +1097,29 @@ footer{
 
 <section class="hero">
 
-    <div class="hero-small">
-        MACHINE LEARNING / CLASSIFICATION / 01
+    <div class="hero-number">
+        01 / 05
+    </div>
+
+    <div class="hero-kicker">
+        MACHINE LEARNING — CLASSIFICATION
     </div>
 
     <h1>
 
-        HOW DOES<br>
-        KNN <span class="blue">DECIDE?</span>
+        WHO IS<br>
+        <em>NEAREST?</em>
 
     </h1>
 
 
-    <div class="hero-bottom">
+    <p class="hero-sub">
 
-        <p class="hero-description">
+        KNN จำแนกข้อมูลใหม่โดยดูจาก
+        <b>เพื่อนบ้านที่อยู่ใกล้ที่สุด</b>
+        แล้วใช้เสียงส่วนใหญ่เป็นคำตอบ
 
-            เมื่อข้อมูลใหม่เข้ามา KNN ไม่ได้เดา
-            แต่จะมองหา
-            <strong>“เพื่อนบ้านที่ใกล้ที่สุด”</strong>
-            แล้วให้พวกเขาโหวตคำตอบ
-
-        </p>
-
-
-        <div class="hero-arrow">
-            ↓
-        </div>
-
-    </div>
+    </p>
 
 </section>
 
@@ -1169,72 +1129,55 @@ footer{
      CONCEPT
 ===================================================== -->
 
-<section class="concept">
+<section class="concept-strip">
 
-    <div class="concept-grid">
+    <div class="concept-item">
 
-        <div>
-
-            <div class="section-label">
-                01 / THE IDEA
-            </div>
-
-            <div class="concept-title">
-
-                Distance<br>
-                decides.
-
-            </div>
-
+        <div class="concept-num">
+            01 / MEASURE
         </div>
 
+        <h3>
+            วัดระยะ
+        </h3>
 
-        <div class="concept-copy">
+        <p>
+            หาว่า Q อยู่ห่างจากข้อมูลเดิมเท่าไร
+        </p>
 
-            <p>
-
-                K-Nearest Neighbors หรือ KNN
-                เป็น Supervised Learning
-                ที่ใช้แนวคิดง่ายมาก:
-                <strong>ข้อมูลที่อยู่ใกล้กัน
-                มีแนวโน้มอยู่ในกลุ่มเดียวกัน</strong>
-
-            </p>
+    </div>
 
 
-            <div class="flow">
+    <div class="concept-item">
 
-                <div class="flow-item">
-                    NEW DATA
-                </div>
-
-                <div class="flow-arrow">
-                    →
-                </div>
-
-                <div class="flow-item">
-                    MEASURE
-                </div>
-
-                <div class="flow-arrow">
-                    →
-                </div>
-
-                <div class="flow-item">
-                    FIND K
-                </div>
-
-                <div class="flow-arrow">
-                    →
-                </div>
-
-                <div class="flow-item">
-                    VOTE
-                </div>
-
-            </div>
-
+        <div class="concept-num">
+            02 / SELECT
         </div>
+
+        <h3>
+            เลือก K
+        </h3>
+
+        <p>
+            เลือกเพื่อนบ้านที่ใกล้ที่สุด K จุด
+        </p>
+
+    </div>
+
+
+    <div class="concept-item">
+
+        <div class="concept-num">
+            03 / VOTE
+        </div>
+
+        <h3>
+            โหวต
+        </h3>
+
+        <p>
+            คลาสที่มีเสียงมากที่สุดคือคำตอบ
+        </p>
 
     </div>
 
@@ -1243,468 +1186,556 @@ footer{
 
 
 <!-- =====================================================
-     INTERACTIVE LAB
+     LAB INTRO
+===================================================== -->
+
+<section class="lab-intro">
+
+    <div>
+
+        <div class="hero-kicker">
+            INTERACTIVE LAB
+        </div>
+
+        <h2>
+            WATCH KNN<br>
+            <span>THINK.</span>
+        </h2>
+
+    </div>
+
+
+    <p class="lab-desc">
+
+        กดปุ่มเพื่อดูการตัดสินใจของ KNN
+        ทีละขั้น ตั้งแต่การวัดระยะ
+        ไปจนถึงผลลัพธ์สุดท้าย
+
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     LAB
 ===================================================== -->
 
 <section class="lab">
 
 
-    <div class="lab-header">
+    <!-- VISUAL -->
 
-        <div>
+    <div class="visual">
 
-            <div class="section-label">
-                02 / INTERACTIVE LAB
-            </div>
+        <div class="visual-grid"></div>
 
-            <div class="lab-title">
-                Watch KNN <span>think.</span>
-            </div>
+        <div class="corner tl">
+            X₁ / X₂ SPACE
+        </div>
 
+        <div class="corner br">
+            Q = NEW DATA
         </div>
 
 
-        <div class="step-counter" id="stepCounter">
-            STEP 01 / 05
+        <svg viewBox="0 0 800 650"
+             preserveAspectRatio="none">
+
+
+            <!-- AXIS -->
+
+            <line
+                class="axis"
+                x1="60"
+                y1="590"
+                x2="750"
+                y2="590"
+            />
+
+            <line
+                class="axis"
+                x1="60"
+                y1="50"
+                x2="60"
+                y2="590"
+            />
+
+            <text
+                class="axis-text"
+                x="735"
+                y="610"
+            >
+                X₁
+            </text>
+
+            <text
+                class="axis-text"
+                x="40"
+                y="65"
+            >
+                X₂
+            </text>
+
+
+            <!-- DISTANCE LINES -->
+
+            <line
+                id="lineA"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="160"
+                y2="410"
+            />
+
+            <line
+                id="lineB"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="260"
+                y2="335"
+            />
+
+            <line
+                id="lineC"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="560"
+                y2="110"
+            />
+
+            <line
+                id="lineD"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="635"
+                y2="185"
+            />
+
+
+            <!-- DISTANCE TEXT -->
+
+            <text
+                id="distA"
+                class="dist"
+                x="195"
+                y="395"
+            >
+                1.00
+            </text>
+
+            <text
+                id="distB"
+                class="dist"
+                x="275"
+                y="375"
+            >
+                1.00
+            </text>
+
+            <text
+                id="distC"
+                class="dist"
+                x="385"
+                y="245"
+            >
+                5.00
+            </text>
+
+            <text
+                id="distD"
+                class="dist"
+                x="450"
+                y="310"
+            >
+                5.00
+            </text>
+
+
+            <!-- RADIUS -->
+
+            <circle
+                id="radius"
+                class="radius"
+                cx="260"
+                cy="410"
+                r="0"
+            />
+
+
+            <!-- QUERY RINGS -->
+
+            <circle
+                class="q-ring"
+                cx="260"
+                cy="410"
+                r="22"
+            />
+
+            <circle
+                class="q-ring r2"
+                cx="260"
+                cy="410"
+                r="22"
+            />
+
+            <circle
+                class="q-ring r3"
+                cx="260"
+                cy="410"
+                r="22"
+            />
+
+
+            <!-- A -->
+
+            <circle
+                class="dot normal-dot"
+                cx="160"
+                cy="410"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="160"
+                y="380"
+                text-anchor="middle"
+            >
+                A
+            </text>
+
+            <text
+                class="coord"
+                x="160"
+                y="435"
+                text-anchor="middle"
+            >
+                (1,2)
+            </text>
+
+
+            <!-- B -->
+
+            <circle
+                class="dot normal-dot"
+                cx="260"
+                cy="335"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="260"
+                y="305"
+                text-anchor="middle"
+            >
+                B
+            </text>
+
+            <text
+                class="coord"
+                x="260"
+                y="360"
+                text-anchor="middle"
+            >
+                (2,3)
+            </text>
+
+
+            <!-- C -->
+
+            <circle
+                class="dot risk-dot"
+                cx="560"
+                cy="110"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="560"
+                y="80"
+                text-anchor="middle"
+            >
+                C
+            </text>
+
+            <text
+                class="coord"
+                x="560"
+                y="135"
+                text-anchor="middle"
+            >
+                (5,6)
+            </text>
+
+
+            <!-- D -->
+
+            <circle
+                class="dot risk-dot"
+                cx="635"
+                cy="185"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="635"
+                y="155"
+                text-anchor="middle"
+            >
+                D
+            </text>
+
+            <text
+                class="coord"
+                x="635"
+                y="210"
+                text-anchor="middle"
+            >
+                (6,5)
+            </text>
+
+
+            <!-- Q -->
+
+            <circle
+                class="dot q-dot"
+                cx="260"
+                cy="410"
+                r="15"
+            />
+
+            <text
+                class="name"
+                x="260"
+                y="450"
+                text-anchor="middle"
+            >
+                Q = (2,2)
+            </text>
+
+
+        </svg>
+
+
+        <div
+            class="tie"
+            id="tie"
+        >
+            C + D&nbsp;&nbsp; / &nbsp;&nbsp;
+            <strong>SAME DISTANCE · 5.00</strong>
         </div>
 
     </div>
 
 
 
-    <div class="lab-grid">
+    <!-- PANEL -->
+
+    <aside class="panel">
 
 
-        <!-- =================================================
-             GRAPH
-        ================================================= -->
+        <div class="panel-head">
 
-        <div class="visual">
+            <span id="panelStep">
+                STEP 01
+            </span>
 
-            <div class="xaxis"></div>
-            <div class="yaxis"></div>
+            <span>
+                KNN
+            </span>
 
-            <div class="coordinate xtext">
-                X₁ →
-            </div>
-
-            <div class="coordinate ytext">
-                X₂ ↑
-            </div>
+        </div>
 
 
-            <svg
-                class="graph-svg"
-                viewBox="0 0 800 600"
-                preserveAspectRatio="none"
-            >
+        <h3 id="panelTitle">
+
+            Start<br>
+            with data.
+
+        </h3>
 
 
-                <!-- DISTANCE LINES -->
+        <p
+            class="panel-description"
+            id="panelDescription"
+        >
 
-                <line
-                    id="lineA"
-                    class="distance-line"
-                    x1="200"
-                    y1="400"
-                    x2="100"
-                    y2="400"
-                />
+            Q คือข้อมูลใหม่
+            ที่เรายังไม่รู้ว่าเป็นกลุ่มไหน
+            ส่วน A–D คือข้อมูลที่มี class อยู่แล้ว
 
-                <line
-                    id="lineB"
-                    class="distance-line"
-                    x1="200"
-                    y1="400"
-                    x2="200"
-                    y2="325"
-                />
-
-                <line
-                    id="lineC"
-                    class="distance-line"
-                    x1="200"
-                    y1="400"
-                    x2="500"
-                    y2="100"
-                />
-
-                <line
-                    id="lineD"
-                    class="distance-line"
-                    x1="200"
-                    y1="400"
-                    x2="575"
-                    y2="175"
-                />
+        </p>
 
 
-                <!-- DISTANCE LABELS -->
-
-                <text
-                    id="distA"
-                    class="distance-label"
-                    x="145"
-                    y="385"
-                >
-                    1.00
-                </text>
-
-                <text
-                    id="distB"
-                    class="distance-label"
-                    x="215"
-                    y="365"
-                >
-                    1.00
-                </text>
-
-                <text
-                    id="distC"
-                    class="distance-label"
-                    x="325"
-                    y="245"
-                >
-                    5.00
-                </text>
-
-                <text
-                    id="distD"
-                    class="distance-label"
-                    x="385"
-                    y="300"
-                >
-                    5.00
-                </text>
-
-
-                <!-- K RADIUS -->
-
-                <circle
-                    id="radius"
-                    class="radius"
-                    cx="200"
-                    cy="400"
-                    r="0"
-                />
-
-
-                <!-- QUERY PULSE -->
-
-                <circle
-                    class="pulse"
-                    cx="200"
-                    cy="400"
-                    r="20"
-                />
-
-
-                <!-- A -->
-
-                <g class="point">
-
-                    <circle
-                        class="point-core normal-point"
-                        cx="100"
-                        cy="400"
-                        r="12"
-                    />
-
-                    <text
-                        class="point-name"
-                        x="100"
-                        y="372"
-                        text-anchor="middle"
-                    >
-                        A
-                    </text>
-
-                    <text
-                        class="point-info"
-                        x="100"
-                        y="425"
-                        text-anchor="middle"
-                    >
-                        (1,2)
-                    </text>
-
-                </g>
-
-
-                <!-- B -->
-
-                <g class="point">
-
-                    <circle
-                        class="point-core normal-point"
-                        cx="200"
-                        cy="325"
-                        r="12"
-                    />
-
-                    <text
-                        class="point-name"
-                        x="200"
-                        y="297"
-                        text-anchor="middle"
-                    >
-                        B
-                    </text>
-
-                    <text
-                        class="point-info"
-                        x="200"
-                        y="350"
-                        text-anchor="middle"
-                    >
-                        (2,3)
-                    </text>
-
-                </g>
-
-
-                <!-- C -->
-
-                <g class="point">
-
-                    <circle
-                        class="point-core risk-point"
-                        cx="500"
-                        cy="100"
-                        r="12"
-                    />
-
-                    <text
-                        class="point-name"
-                        x="500"
-                        y="72"
-                        text-anchor="middle"
-                    >
-                        C
-                    </text>
-
-                    <text
-                        class="point-info"
-                        x="500"
-                        y="125"
-                        text-anchor="middle"
-                    >
-                        (5,6)
-                    </text>
-
-                </g>
-
-
-                <!-- D -->
-
-                <g class="point">
-
-                    <circle
-                        class="point-core risk-point"
-                        cx="575"
-                        cy="175"
-                        r="12"
-                    />
-
-                    <text
-                        class="point-name"
-                        x="575"
-                        y="147"
-                        text-anchor="middle"
-                    >
-                        D
-                    </text>
-
-                    <text
-                        class="point-info"
-                        x="575"
-                        y="200"
-                        text-anchor="middle"
-                    >
-                        (6,5)
-                    </text>
-
-                </g>
-
-
-                <!-- Q -->
-
-                <g>
-
-                    <circle
-                        class="point-core query-point"
-                        cx="200"
-                        cy="400"
-                        r="15"
-                    />
-
-                    <text
-                        class="point-name"
-                        x="200"
-                        y="445"
-                        text-anchor="middle"
-                    >
-                        Q = (2,2)
-                    </text>
-
-                </g>
-
-            </svg>
+        <div class="distance-list">
 
 
             <div
-                class="tie-label"
-                id="tieLabel"
+                class="d-row"
+                id="rowA"
             >
-                C + D &nbsp; / &nbsp; <b>SAME DISTANCE 5.00</b>
+                <span>A</span>
+                <span>NORMAL</span>
+                <span class="value">1.00</span>
+            </div>
+
+
+            <div
+                class="d-row"
+                id="rowB"
+            >
+                <span>B</span>
+                <span>NORMAL</span>
+                <span class="value">1.00</span>
+            </div>
+
+
+            <div
+                class="d-row risk"
+                id="rowC"
+            >
+                <span>C</span>
+                <span>HIGH RISK</span>
+                <span class="value">5.00</span>
+            </div>
+
+
+            <div
+                class="d-row risk"
+                id="rowD"
+            >
+                <span>D</span>
+                <span>HIGH RISK</span>
+                <span class="value">5.00</span>
+            </div>
+
+
+        </div>
+
+
+        <div class="k-box">
+
+
+            <div class="k-label">
+                NUMBER OF NEIGHBORS
+            </div>
+
+
+            <div class="k-top">
+
+                <div
+                    class="k-number"
+                    id="kNumber"
+                >
+                    3
+                </div>
+
+                <div class="k-name">
+                    K<br>
+                    NEAREST
+                </div>
+
+            </div>
+
+
+            <input
+                id="kSlider"
+                type="range"
+                min="1"
+                max="4"
+                value="3"
+            >
+
+
+            <button
+                class="main-btn"
+                id="nextBtn"
+            >
+                START →
+            </button>
+
+
+            <button
+                class="reset-btn"
+                id="resetBtn"
+            >
+                RESET
+            </button>
+
+        </div>
+
+    </aside>
+
+</section>
+
+
+
+<!-- =====================================================
+     EXPLANATION
+===================================================== -->
+
+<section class="explain">
+
+    <div>
+
+        <div class="hero-kicker">
+            THE MATH
+        </div>
+
+        <div class="explain-title">
+            Simple<br>
+            geometry.
+        </div>
+
+    </div>
+
+
+    <div class="explain-copy">
+
+        <div class="formula-box">
+
+            <div class="formula-label">
+                EUCLIDEAN DISTANCE
+            </div>
+
+            <div class="formula">
+
+                d(P,Q) =
+                <span>
+                    √[(p₁−q₁)² + (p₂−q₂)²]
+                </span>
+
             </div>
 
         </div>
 
 
+        <p>
 
-        <!-- =================================================
-             SIDE PANEL
-        ================================================= -->
+            สำหรับ Q = (2,2)
+            เราคำนวณระยะทางไปยังข้อมูลทุกจุด
 
-        <aside class="panel">
+            <br><br>
 
+            A = 1.00 &nbsp;·&nbsp;
+            B = 1.00 &nbsp;·&nbsp;
+            C = 5.00 &nbsp;·&nbsp;
+            D = 5.00
 
-            <div class="panel-top">
+            <br><br>
 
-                <span id="panelStep">
-                    STEP 01
-                </span>
+            ยิ่งตัวเลขน้อย
+            แปลว่ายิ่งอยู่ใกล้ Q
 
-                <span>
-                    KNN
-                </span>
-
-            </div>
-
-
-            <div
-                class="panel-title"
-                id="panelTitle"
-            >
-                Start<br>
-                here.
-            </div>
-
-
-            <div
-                class="panel-text"
-                id="panelText"
-            >
-
-                จุด Q คือข้อมูลใหม่
-                ที่เรายังไม่รู้ว่าอยู่ในกลุ่มไหน
-                เราจะใช้ข้อมูลเดิม A–D
-                เพื่อช่วยตัดสินใจ
-
-            </div>
-
-
-            <!-- DISTANCES -->
-
-            <div class="distances">
-
-
-                <div
-                    class="distance-row"
-                    id="rowA"
-                >
-                    <span>A</span>
-                    <span>ปกติ</span>
-                    <span class="dist-value">1.00</span>
-                </div>
-
-
-                <div
-                    class="distance-row"
-                    id="rowB"
-                >
-                    <span>B</span>
-                    <span>ปกติ</span>
-                    <span class="dist-value">1.00</span>
-                </div>
-
-
-                <div
-                    class="distance-row tie"
-                    id="rowC"
-                >
-                    <span>C</span>
-                    <span>เสี่ยงสูง</span>
-                    <span class="dist-value">5.00</span>
-                </div>
-
-
-                <div
-                    class="distance-row tie"
-                    id="rowD"
-                >
-                    <span>D</span>
-                    <span>เสี่ยงสูง</span>
-                    <span class="dist-value">5.00</span>
-                </div>
-
-
-            </div>
-
-
-            <!-- K -->
-
-            <div class="k-control">
-
-                <div class="k-caption">
-                    NEIGHBORS TO CONSIDER
-                </div>
-
-
-                <div class="k-value">
-
-                    <div class="k-number" id="kNumber">
-                        3
-                    </div>
-
-                    <div class="k-label">
-                        K<br>
-                        NEIGHBORS
-                    </div>
-
-                </div>
-
-
-                <input
-                    id="kSlider"
-                    class="k-slider"
-                    type="range"
-                    min="1"
-                    max="4"
-                    value="3"
-                >
-
-
-                <button
-                    class="action"
-                    id="nextBtn"
-                >
-                    START WITH THE DATA →
-                </button>
-
-
-                <button
-                    class="reset"
-                    id="resetBtn"
-                >
-                    RESET
-                </button>
-
-            </div>
-
-
-        </aside>
+        </p>
 
     </div>
 
@@ -1713,194 +1744,86 @@ footer{
 
 
 <!-- =====================================================
-     RESULT
+     FINAL
 ===================================================== -->
 
-<section class="result-section">
+<section class="final">
 
-    <div class="result-grid">
+    <div class="final-grid">
 
 
         <div>
 
-            <div class="section-label">
-                03 / THE DECISION
+            <div class="final-kicker">
+                FINAL PREDICTION / K = 3
             </div>
 
-            <div class="result-heading">
-
+            <h2>
                 <span>NORMAL</span>
-
-            </div>
+            </h2>
 
         </div>
 
 
         <div>
 
-            <p class="result-copy">
+            <p class="final-text">
 
-                เมื่อกำหนด K = 3
-                เพื่อนบ้านที่ใช้ตัดสินใจมี
-                A, B และ C หรือ D
-                ซึ่งให้คะแนนเป็น
+                เพื่อนบ้านที่ใช้ตัดสินใจ
+                ให้เสียงส่วนใหญ่เป็น “ปกติ”
 
             </p>
 
 
-            <div class="proof">
+            <div class="vote-proof">
 
-                <div class="proof-number">
-                    2
+                <div class="vote blue">
+
+                    <strong>2</strong>
+
+                    <small>
+                        NORMAL
+                    </small>
+
                 </div>
 
-                <div class="proof-vs">
+
+                <div class="vs">
                     VS
                 </div>
 
-                <div class="proof-risk">
-                    1
+
+                <div class="vote red">
+
+                    <strong>1</strong>
+
+                    <small>
+                        HIGH RISK
+                    </small>
+
                 </div>
 
             </div>
 
 
             <p
-                class="result-copy"
-                style="margin-top:25px;font-size:14px;"
+                class="final-text"
+                style="margin-top:25px;font-size:13px;"
             >
 
-                <strong style="color:#6f91ff;">
-                    2 NORMAL
+                ดังนั้น
+
+                <strong style="color:#fff;">
+                    Q = (2,2)
                 </strong>
 
-                &nbsp; >
+                ถูกจัดอยู่ในกลุ่ม
 
-                &nbsp;
-
-                <strong style="color:#ff737b;">
-                    1 HIGH RISK
+                <strong style="color:var(--blue);">
+                    NORMAL
                 </strong>
-
-                <br>
-
-                เสียงส่วนใหญ่จึงชนะ
 
             </p>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     DATA
-===================================================== -->
-
-<section class="data-section">
-
-    <div class="section-label">
-        04 / DATASET
-    </div>
-
-    <div class="data-title">
-        The data behind<br>
-        the decision.
-    </div>
-
-
-    <div class="data-table">
-
-
-        <div class="data-row header">
-
-            <div>POINT</div>
-            <div>X₁</div>
-            <div>X₂</div>
-            <div>CLASS</div>
-
-        </div>
-
-
-        <div class="data-row">
-
-            <div class="point-name-table">
-                A
-            </div>
-
-            <div>1</div>
-            <div>2</div>
-
-            <div class="normal-tag">
-                NORMAL
-            </div>
-
-        </div>
-
-
-        <div class="data-row">
-
-            <div class="point-name-table">
-                B
-            </div>
-
-            <div>2</div>
-            <div>3</div>
-
-            <div class="normal-tag">
-                NORMAL
-            </div>
-
-        </div>
-
-
-        <div class="data-row">
-
-            <div class="point-name-table">
-                C
-            </div>
-
-            <div>5</div>
-            <div>6</div>
-
-            <div class="risk-tag">
-                HIGH RISK
-            </div>
-
-        </div>
-
-
-        <div class="data-row">
-
-            <div class="point-name-table">
-                D
-            </div>
-
-            <div>6</div>
-            <div>5</div>
-
-            <div class="risk-tag">
-                HIGH RISK
-            </div>
-
-        </div>
-
-
-        <div class="data-row">
-
-            <div class="point-name-table">
-                Q
-            </div>
-
-            <div>2</div>
-            <div>2</div>
-
-            <div>
-                UNKNOWN
-            </div>
 
         </div>
 
@@ -1913,11 +1836,11 @@ footer{
 <footer>
 
     <span>
-        KNN / INTERACTIVE ML VISUALIZATION
+        KNN / NEAREST NEIGHBORS
     </span>
 
     <span>
-        EUCLIDEAN DISTANCE · MAJORITY VOTE
+        INTERACTIVE DATA VISUALIZATION
     </span>
 
 </footer>
@@ -1926,18 +1849,17 @@ footer{
 
 <script>
 
-/* =========================================================
+/* =====================================================
    STATE
-========================================================= */
+===================================================== */
 
 let step = 1;
-
 let K = 3;
 
 
-/* =========================================================
+/* =====================================================
    ELEMENTS
-========================================================= */
+===================================================== */
 
 const nextBtn =
     document.getElementById("nextBtn");
@@ -1945,14 +1867,11 @@ const nextBtn =
 const resetBtn =
     document.getElementById("resetBtn");
 
-const kSlider =
+const slider =
     document.getElementById("kSlider");
 
 const kNumber =
     document.getElementById("kNumber");
-
-const stepCounter =
-    document.getElementById("stepCounter");
 
 const panelStep =
     document.getElementById("panelStep");
@@ -1960,130 +1879,132 @@ const panelStep =
 const panelTitle =
     document.getElementById("panelTitle");
 
-const panelText =
-    document.getElementById("panelText");
+const panelDescription =
+    document.getElementById("panelDescription");
 
-const tieLabel =
-    document.getElementById("tieLabel");
+const tie =
+    document.getElementById("tie");
 
 const radius =
     document.getElementById("radius");
 
 
-const rows = {
-
-    A: document.getElementById("rowA"),
-    B: document.getElementById("rowB"),
-    C: document.getElementById("rowC"),
-    D: document.getElementById("rowD")
-
-};
-
-
 const lines = {
 
-    A: document.getElementById("lineA"),
-    B: document.getElementById("lineB"),
-    C: document.getElementById("lineC"),
-    D: document.getElementById("lineD")
+    A:document.getElementById("lineA"),
+    B:document.getElementById("lineB"),
+    C:document.getElementById("lineC"),
+    D:document.getElementById("lineD")
 
 };
 
 
 const labels = {
 
-    A: document.getElementById("distA"),
-    B: document.getElementById("distB"),
-    C: document.getElementById("distC"),
-    D: document.getElementById("distD")
+    A:document.getElementById("distA"),
+    B:document.getElementById("distB"),
+    C:document.getElementById("distC"),
+    D:document.getElementById("distD")
+
+};
+
+
+const rows = {
+
+    A:document.getElementById("rowA"),
+    B:document.getElementById("rowB"),
+    C:document.getElementById("rowC"),
+    D:document.getElementById("rowD")
 
 };
 
 
 
-/* =========================================================
-   UPDATE K
-========================================================= */
+/* =====================================================
+   K SLIDER
+===================================================== */
 
-kSlider.addEventListener("input",()=>{
+slider.addEventListener("input",()=>{
 
-    K = Number(kSlider.value);
+    K = Number(slider.value);
 
     kNumber.textContent = K;
+
+    if(step === 3){
+
+        updateStep();
+
+    }
 
 });
 
 
 
-/* =========================================================
-   RESET VISUALS
-========================================================= */
+/* =====================================================
+   RESET VISUAL
+===================================================== */
 
-function resetVisuals(){
+function clearVisual(){
 
-    Object.values(lines).forEach(line=>{
+    Object.values(lines).forEach(el=>{
 
-        line.classList.remove("visible");
-        line.classList.remove("selected");
-
-    });
-
-
-    Object.values(labels).forEach(label=>{
-
-        label.classList.remove("visible");
+        el.classList.remove("show");
+        el.classList.remove("selected");
 
     });
 
 
-    Object.values(rows).forEach(row=>{
+    Object.values(labels).forEach(el=>{
 
-        row.classList.remove("active");
+        el.classList.remove("show");
 
     });
 
 
-    radius.classList.remove("visible");
+    Object.values(rows).forEach(el=>{
+
+        el.classList.remove("active");
+
+    });
+
+
+    radius.classList.remove("show");
 
     radius.setAttribute("r","0");
 
-    tieLabel.classList.remove("show");
+    tie.classList.remove("show");
 
 }
 
 
 
-/* =========================================================
-   UPDATE STEP
-========================================================= */
+/* =====================================================
+   STEP UPDATE
+===================================================== */
 
 function updateStep(){
 
-    resetVisuals();
+    clearVisual();
 
-
-    stepCounter.textContent =
-        `STEP ${String(step).padStart(2,"0")} / 05`;
 
     panelStep.textContent =
         `STEP ${String(step).padStart(2,"0")}`;
 
 
 
-    /* -----------------------------------------------------
+    /* -----------------------------------------------
        STEP 1
-    ----------------------------------------------------- */
+    ----------------------------------------------- */
 
     if(step === 1){
 
         panelTitle.innerHTML =
-            "Start<br>here.";
+            "Start<br>with data.";
 
-        panelText.innerHTML =
-            "จุด Q คือข้อมูลใหม่ " +
-            "ที่เรายังไม่รู้ว่าอยู่ในกลุ่มไหน " +
-            "เราจะใช้ข้อมูลเดิม A–D " +
-            "เพื่อช่วยตัดสินใจ";
+        panelDescription.innerHTML =
+            "Q คือข้อมูลใหม่ " +
+            "ที่เรายังไม่รู้ว่าเป็นกลุ่มไหน " +
+            "ส่วน A–D คือข้อมูลที่มี class อยู่แล้ว";
 
         nextBtn.textContent =
             "MEASURE DISTANCE →";
@@ -2092,42 +2013,35 @@ function updateStep(){
 
 
 
-    /* -----------------------------------------------------
+    /* -----------------------------------------------
        STEP 2
-    ----------------------------------------------------- */
+    ----------------------------------------------- */
 
     if(step === 2){
 
         panelTitle.innerHTML =
             "Measure<br>distance.";
 
-        panelText.innerHTML =
-            "KNN จะคำนวณระยะห่างจาก Q " +
-            "ไปยังข้อมูลทุกจุดด้วย " +
-            "Euclidean Distance";
+        panelDescription.innerHTML =
+            "เราวัดระยะจาก Q " +
+            "ไปยังทุกจุด " +
+            "เพื่อดูว่าใครอยู่ใกล้ที่สุด";
 
         nextBtn.textContent =
-            "FIND THE NEAREST →";
+            "FIND NEIGHBORS →";
 
 
-        const order =
-            ["A","B","C","D"];
-
-
-        order.forEach((key,index)=>{
+        ["A","B","C","D"].forEach((key,index)=>{
 
             setTimeout(()=>{
 
-                lines[key]
-                    .classList.add("visible");
+                lines[key].classList.add("show");
 
-                labels[key]
-                    .classList.add("visible");
+                labels[key].classList.add("show");
 
-                rows[key]
-                    .classList.add("active");
+                rows[key].classList.add("active");
 
-            },index * 180);
+            },index*180);
 
         });
 
@@ -2135,16 +2049,16 @@ function updateStep(){
 
 
 
-    /* -----------------------------------------------------
+    /* -----------------------------------------------
        STEP 3
-    ----------------------------------------------------- */
+    ----------------------------------------------- */
 
     if(step === 3){
 
         panelTitle.innerHTML =
             "Choose<br>K = " + K + ".";
 
-        panelText.innerHTML =
+        panelDescription.innerHTML =
             "เลือกเพื่อนบ้านที่ใกล้ที่สุด " +
             K + " จุด";
 
@@ -2152,15 +2066,13 @@ function updateStep(){
             "COUNT THE VOTES →";
 
 
-        lines.A.classList.add("visible");
-        lines.B.classList.add("visible");
-        lines.C.classList.add("visible");
-        lines.D.classList.add("visible");
+        Object.values(lines).forEach(el=>{
+            el.classList.add("show");
+        });
 
-        labels.A.classList.add("visible");
-        labels.B.classList.add("visible");
-        labels.C.classList.add("visible");
-        labels.D.classList.add("visible");
+        Object.values(labels).forEach(el=>{
+            el.classList.add("show");
+        });
 
 
         rows.A.classList.add("active");
@@ -2189,9 +2101,9 @@ function updateStep(){
 
             radius.setAttribute("r","255");
 
-            radius.classList.add("visible");
+            radius.classList.add("show");
 
-            tieLabel.classList.add("show");
+            tie.classList.add("show");
 
         }
 
@@ -2199,19 +2111,19 @@ function updateStep(){
 
 
 
-    /* -----------------------------------------------------
+    /* -----------------------------------------------
        STEP 4
-    ----------------------------------------------------- */
+    ----------------------------------------------- */
 
     if(step === 4){
 
         panelTitle.innerHTML =
-            "Let them<br>vote.";
+            "Count<br>the votes.";
 
-        panelText.innerHTML =
-            "เพื่อนบ้านที่เลือกมาส่วนใหญ่ " +
-            "เป็นคลาสปกติ " +
-            "จึงชนะด้วยเสียงข้างมาก";
+        panelDescription.innerHTML =
+            "A และ B เป็น NORMAL " +
+            "จึงได้ 2 เสียง " +
+            "ส่วน C หรือ D ได้ 1 เสียง";
 
         nextBtn.textContent =
             "REVEAL RESULT →";
@@ -2221,34 +2133,30 @@ function updateStep(){
         rows.B.classList.add("active");
 
         if(K >= 3){
-
             rows.C.classList.add("active");
-
         }
 
         if(K >= 4){
-
             rows.D.classList.add("active");
-
         }
 
     }
 
 
 
-    /* -----------------------------------------------------
+    /* -----------------------------------------------
        STEP 5
-    ----------------------------------------------------- */
+    ----------------------------------------------- */
 
     if(step === 5){
 
         panelTitle.innerHTML =
             "Decision<br>made.";
 
-        panelText.innerHTML =
-            "Q = (2,2) ถูกจัดอยู่ในกลุ่ม " +
-            "“ปกติ” เพราะเสียงส่วนใหญ่ " +
-            "เป็นคลาสปกติ";
+        panelDescription.innerHTML =
+            "เสียงส่วนใหญ่เป็น NORMAL " +
+            "ดังนั้น Q = (2,2) " +
+            "จึงถูกจัดเป็น NORMAL";
 
         nextBtn.textContent =
             "RESTART ↻";
@@ -2259,9 +2167,9 @@ function updateStep(){
 
 
 
-/* =========================================================
-   NEXT BUTTON
-========================================================= */
+/* =====================================================
+   NEXT
+===================================================== */
 
 nextBtn.addEventListener("click",()=>{
 
@@ -2281,9 +2189,9 @@ nextBtn.addEventListener("click",()=>{
 
 
 
-/* =========================================================
-   RESET BUTTON
-========================================================= */
+/* =====================================================
+   RESET
+===================================================== */
 
 resetBtn.addEventListener("click",()=>{
 
@@ -2291,7 +2199,7 @@ resetBtn.addEventListener("click",()=>{
 
     K = 3;
 
-    kSlider.value = 3;
+    slider.value = 3;
 
     kNumber.textContent = 3;
 
@@ -2301,15 +2209,15 @@ resetBtn.addEventListener("click",()=>{
 
 
 
-/* =========================================================
-   KEYBOARD
-========================================================= */
+/* =====================================================
+   SPACE
+===================================================== */
 
-document.addEventListener("keydown",(event)=>{
+document.addEventListener("keydown",(e)=>{
 
-    if(event.code === "Space"){
+    if(e.code === "Space"){
 
-        event.preventDefault();
+        e.preventDefault();
 
         nextBtn.click();
 
@@ -2319,9 +2227,9 @@ document.addEventListener("keydown",(event)=>{
 
 
 
-/* =========================================================
+/* =====================================================
    INIT
-========================================================= */
+===================================================== */
 
 updateStep();
 

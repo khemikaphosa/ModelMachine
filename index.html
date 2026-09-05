@@ -1,10 +1,11 @@
+```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>KNN — Who Is Your Neighbor?</title>
+<title>KNN — How Does It Decide?</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,8 +14,33 @@
 <style>
 
 /* =========================================================
-   BASE
+   ROOT
 ========================================================= */
+
+:root{
+
+    --bg:#080b12;
+    --bg2:#0d111a;
+    --panel:#111722;
+
+    --white:#f4f6fb;
+    --text:#dce1eb;
+    --muted:#737c8d;
+    --muted2:#4d5666;
+
+    --blue:#6d8cff;
+    --blue2:#9badff;
+
+    --pink:#ff7184;
+    --pink2:#ff9baa;
+
+    --yellow:#ffd76a;
+
+    --line:rgba(255,255,255,.09);
+
+    --shadow:
+        0 30px 100px rgba(0,0,0,.45);
+}
 
 *{
     box-sizing:border-box;
@@ -22,68 +48,103 @@
     padding:0;
 }
 
-:root{
-    --cream:#f7f3ec;
-    --cream2:#eee8df;
-
-    --ink:#20212a;
-    --muted:#898691;
-
-    --blue:#7897ff;
-    --blue-dark:#5875e8;
-    --blue-light:#dce5ff;
-
-    --pink:#f39cae;
-    --pink-light:#ffe1e7;
-
-    --purple:#b59bea;
-
-    --yellow:#ffd76b;
-
-    --white:rgba(255,255,255,.72);
-
-    --shadow:
-        0 30px 80px rgba(54,47,75,.13);
-}
-
 html{
     scroll-behavior:smooth;
 }
 
 body{
-    background:var(--cream);
-    color:var(--ink);
+
+    background:var(--bg);
+
+    color:var(--text);
+
     font-family:"DM Sans",sans-serif;
+
     overflow-x:hidden;
 }
 
 
 /* =========================================================
-   BACKGROUND DECOR
+   BACKGROUND
 ========================================================= */
 
-.blob{
+body::before{
+
+    content:"";
+
     position:fixed;
-    border-radius:50%;
-    filter:blur(70px);
+
+    inset:0;
+
     pointer-events:none;
-    z-index:-1;
+
+    z-index:-5;
+
+    background-image:
+        linear-gradient(
+            rgba(255,255,255,.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.025) 1px,
+            transparent 1px
+        );
+
+    background-size:70px 70px;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black,
+            transparent 90%
+        );
 }
 
-.blob.one{
+
+.glow-blue{
+
+    position:fixed;
+
+    width:500px;
+    height:500px;
+
+    border-radius:50%;
+
+    background:
+        rgba(67,96,220,.12);
+
+    filter:blur(120px);
+
+    top:-200px;
+    right:-150px;
+
+    pointer-events:none;
+
+    z-index:-4;
+}
+
+
+.glow-pink{
+
+    position:fixed;
+
     width:400px;
     height:400px;
-    background:rgba(120,151,255,.18);
-    top:-120px;
-    right:-100px;
-}
 
-.blob.two{
-    width:330px;
-    height:330px;
-    background:rgba(243,156,174,.14);
-    bottom:10%;
-    left:-150px;
+    border-radius:50%;
+
+    background:
+        rgba(230,70,100,.07);
+
+    filter:blur(110px);
+
+    bottom:0;
+    left:-180px;
+
+    pointer-events:none;
+
+    z-index:-4;
 }
 
 
@@ -92,55 +153,100 @@ body{
 ========================================================= */
 
 nav{
+
     height:76px;
 
     padding:0 5vw;
 
     display:flex;
+
     align-items:center;
+
     justify-content:space-between;
 
+    border-bottom:1px solid var(--line);
+
+    backdrop-filter:blur(20px);
+
     position:relative;
-    z-index:10;
+
+    z-index:20;
 }
 
-.logo{
+
+.brand{
+
     display:flex;
+
     align-items:center;
+
     gap:12px;
 
     font-family:"Space Mono",monospace;
-    font-size:11px;
-    letter-spacing:.05em;
+
+    font-size:10px;
+
+    letter-spacing:.08em;
 }
 
-.logo-circle{
+
+.brand-icon{
+
     width:34px;
     height:34px;
 
-    border-radius:50%;
+    border-radius:11px;
 
-    background:#fff;
+    border:1px solid rgba(109,140,255,.55);
 
-    box-shadow:0 8px 20px rgba(50,50,70,.08);
+    color:var(--blue2);
 
     display:grid;
+
     place-items:center;
 
-    color:var(--blue-dark);
-
-    font-weight:bold;
+    box-shadow:
+        0 0 30px rgba(109,140,255,.13);
 }
 
-.nav-right{
+
+.nav-info{
+
     display:flex;
+
     align-items:center;
+
     gap:25px;
 
-    color:#92909a;
-
     font-family:"Space Mono",monospace;
+
     font-size:9px;
+
+    color:var(--muted);
+}
+
+
+.live{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+}
+
+
+.live-dot{
+
+    width:6px;
+    height:6px;
+
+    border-radius:50%;
+
+    background:#63dfa1;
+
+    box-shadow:
+        0 0 12px #63dfa1;
 }
 
 
@@ -149,306 +255,378 @@ nav{
 ========================================================= */
 
 .hero{
+
     min-height:calc(100vh - 76px);
 
-    padding:70px 7vw;
+    padding:90px 7vw;
 
     display:grid;
-    grid-template-columns:1fr 1fr;
+
+    grid-template-columns:
+        minmax(0,1.1fr)
+        minmax(350px,.9fr);
 
     align-items:center;
 
-    gap:4vw;
+    gap:6vw;
 
     position:relative;
 }
 
-.hero-text{
-    position:relative;
-    z-index:2;
-}
 
-.eyebrow{
+.hero-kicker{
+
     font-family:"Space Mono",monospace;
-    font-size:10px;
-    letter-spacing:.15em;
-    color:#96939b;
 
-    margin-bottom:25px;
+    color:#606a7a;
+
+    font-size:10px;
+
+    letter-spacing:.18em;
+
+    margin-bottom:30px;
 }
+
 
 .hero h1{
-    font-size:clamp(70px,9vw,145px);
 
-    line-height:.78;
+    font-size:
+        clamp(70px,9.5vw,150px);
 
-    letter-spacing:-.09em;
+    line-height:.79;
+
+    letter-spacing:-.095em;
 
     font-weight:800;
 }
 
-.hero h1 .blue{
-    color:var(--blue-dark);
+
+.hero h1 span{
+
+    color:var(--blue);
+
+    text-shadow:
+        0 0 60px rgba(109,140,255,.2);
 }
+
 
 .hero-description{
-    margin-top:42px;
 
-    max-width:470px;
+    max-width:500px;
+
+    margin-top:45px;
+
+    color:#7e8797;
 
     font-size:17px;
-    line-height:1.8;
 
-    color:#77747d;
+    line-height:1.8;
 }
+
 
 .hero-description strong{
-    color:var(--ink);
+
+    color:#edf0f6;
 }
 
+
 .hero-button{
-    margin-top:35px;
 
-    border:0;
+    margin-top:30px;
 
-    padding:16px 25px;
+    padding:15px 23px;
 
-    border-radius:100px;
+    border-radius:12px;
 
-    background:var(--ink);
+    border:1px solid rgba(255,255,255,.12);
 
-    color:white;
+    background:rgba(255,255,255,.05);
 
-    font-weight:600;
+    color:#fff;
 
     cursor:pointer;
 
-    box-shadow:
-        0 15px 35px rgba(32,33,42,.18);
+    font-size:12px;
+
+    font-weight:600;
 
     transition:.3s;
 }
 
+
 .hero-button:hover{
-    transform:translateY(-3px);
+
+    background:rgba(109,140,255,.12);
+
+    border-color:
+        rgba(109,140,255,.45);
+
+    transform:translateY(-2px);
 }
 
 
 /* =========================================================
-   HERO VISUAL
+   HERO ORBIT
 ========================================================= */
 
-.hero-art{
-    height:570px;
+.hero-visual{
+
+    height:520px;
 
     position:relative;
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    display:grid;
+
+    place-items:center;
 }
 
+
 .orbit{
+
     position:absolute;
 
-    width:430px;
-    height:430px;
-
-    border:1px solid rgba(88,117,232,.17);
+    border:1px solid
+        rgba(109,140,255,.13);
 
     border-radius:50%;
 
-    transform:rotate(-15deg);
+    transform:rotate(-20deg);
 }
 
-.orbit.two{
-    width:350px;
-    height:350px;
 
-    border-color:rgba(243,156,174,.2);
+.orbit.one{
+
+    width:420px;
+    height:420px;
+}
+
+
+.orbit.two{
+
+    width:330px;
+    height:330px;
+
+    border-color:
+        rgba(255,113,132,.12);
 
     transform:rotate(25deg);
 }
 
+
 .orbit.three{
-    width:520px;
-    height:220px;
 
-    border-color:rgba(181,155,234,.16);
+    width:510px;
+    height:210px;
 
-    transform:rotate(-30deg);
+    border-color:
+        rgba(160,130,255,.11);
+
+    transform:rotate(-25deg);
 }
 
 
-/* floating spheres */
+.hero-point{
 
-.sphere{
     position:absolute;
 
     border-radius:50%;
 
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    display:grid;
+
+    place-items:center;
 
     font-family:"Space Mono",monospace;
 
+    font-size:11px;
+
+    font-weight:bold;
+
     box-shadow:
-        inset -15px -18px 30px rgba(0,0,0,.08),
-        inset 12px 10px 20px rgba(255,255,255,.7),
-        0 25px 40px rgba(55,50,70,.14);
+        inset -12px -16px 25px rgba(0,0,0,.18),
+        inset 10px 8px 20px rgba(255,255,255,.15),
+        0 20px 45px rgba(0,0,0,.3);
 
     animation:float 5s ease-in-out infinite;
 }
 
-.sphere-a{
-    width:115px;
-    height:115px;
 
-    background:linear-gradient(
-        145deg,
-        #cbd7ff,
-        #7796ff
-    );
+.hp-a{
 
-    left:14%;
-    top:22%;
+    width:85px;
+    height:85px;
 
-    animation-delay:-1s;
+    left:15%;
+    top:20%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #8fa7ff,
+            #506bd4
+        );
+
 }
 
-.sphere-b{
-    width:90px;
-    height:90px;
 
-    background:linear-gradient(
-        145deg,
-        #ffe5ea,
-        #ef9cac
-    );
+.hp-b{
+
+    width:65px;
+    height:65px;
 
     right:16%;
-    top:15%;
+    top:17%;
 
-    animation-delay:-2.5s;
+    background:
+        linear-gradient(
+            145deg,
+            #ff9eaa,
+            #d65a6d
+        );
+
+    animation-delay:-2s;
 }
 
-.sphere-c{
-    width:125px;
-    height:125px;
 
-    background:linear-gradient(
-        145deg,
-        #d6c8fa,
-        #a78bdf
-    );
+.hp-c{
 
-    right:12%;
-    bottom:20%;
+    width:92px;
+    height:92px;
+
+    right:10%;
+    bottom:18%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ff8998,
+            #bd4d62
+        );
 
     animation-delay:-3s;
 }
 
-.sphere-d{
-    width:75px;
-    height:75px;
 
-    background:linear-gradient(
-        145deg,
-        #fff1b8,
-        #ffd264
-    );
+.hp-d{
 
-    left:20%;
-    bottom:19%;
+    width:55px;
+    height:55px;
 
-    animation-delay:-4s;
+    left:18%;
+    bottom:18%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #899fff,
+            #526dd9
+        );
+
+    animation-delay:-1.5s;
 }
+
 
 @keyframes float{
 
     0%,100%{
-        transform:translateY(0) rotate(0);
+        transform:translateY(0);
     }
 
     50%{
-        transform:translateY(-18px) rotate(3deg);
+        transform:translateY(-15px);
     }
 
 }
 
 
-/* central Q */
+.hero-q{
 
-.q-orb{
-    width:155px;
-    height:155px;
+    width:130px;
+    height:130px;
 
     border-radius:50%;
 
     background:
         radial-gradient(
-            circle at 35% 28%,
-            #fff,
-            #ffe7a0 25%,
-            #ffc94e 70%
+            circle at 30% 25%,
+            #fff8d6,
+            #ffd66a 50%,
+            #d69d28 100%
         );
 
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    display:grid;
+
+    place-items:center;
 
     position:relative;
+
     z-index:5;
 
-    box-shadow:
-        inset -18px -25px 35px rgba(190,130,0,.16),
-        inset 15px 12px 30px rgba(255,255,255,.8),
-        0 35px 60px rgba(201,157,48,.22);
+    color:#493a18;
 
-    animation:qFloat 4s ease-in-out infinite;
+    box-shadow:
+        inset -15px -20px 30px
+            rgba(120,75,0,.18),
+
+        inset 12px 10px 25px
+            rgba(255,255,255,.75),
+
+        0 30px 60px
+            rgba(0,0,0,.35),
+
+        0 0 50px
+            rgba(255,214,106,.12);
+
+    animation:qfloat 4s ease-in-out infinite;
 }
 
-.q-orb::before,
-.q-orb::after{
+
+.hero-q::before,
+.hero-q::after{
+
     content:"";
 
     position:absolute;
 
     inset:-18px;
 
-    border:1px solid rgba(255,200,80,.35);
+    border:1px solid
+        rgba(255,214,106,.25);
 
     border-radius:50%;
 
     animation:ring 2.8s infinite;
 }
 
-.q-orb::after{
-    inset:-38px;
+
+.hero-q::after{
+
+    inset:-35px;
 
     animation-delay:1s;
 }
 
-.q-content{
-    text-align:center;
+
+.hero-q strong{
+
+    font-size:27px;
 }
 
-.q-content strong{
+
+.hero-q small{
+
     display:block;
 
-    font-size:28px;
-
-    letter-spacing:-.05em;
-}
-
-.q-content span{
     font-family:"Space Mono",monospace;
-    font-size:9px;
-    color:#8d7742;
+
+    font-size:7px;
+
+    margin-top:3px;
+
+    opacity:.7;
 }
 
-@keyframes qFloat{
+
+@keyframes qfloat{
 
     0%,100%{
         transform:translateY(0);
@@ -460,6 +638,7 @@ nav{
 
 }
 
+
 @keyframes ring{
 
     0%{
@@ -467,7 +646,7 @@ nav{
         opacity:.6;
     }
 
-    80%,100%{
+    75%,100%{
         transform:scale(1.2);
         opacity:0;
     }
@@ -476,180 +655,235 @@ nav{
 
 
 /* =========================================================
-   SIMPLE IDEA
+   IDEA
 ========================================================= */
 
 .idea{
+
     padding:100px 7vw;
 
-    background:#fffaf4;
+    border-top:1px solid var(--line);
 
-    border-radius:50px 50px 0 0;
+    background:#0a0d14;
 }
 
-.idea-head{
-    max-width:700px;
+
+.idea-title{
+
+    max-width:800px;
+
+    font-size:
+        clamp(45px,6vw,85px);
+
+    line-height:.86;
+
+    letter-spacing:-.08em;
 }
 
-.idea-head h2{
-    font-size:clamp(45px,6vw,85px);
 
-    line-height:.88;
+.idea-title span{
 
-    letter-spacing:-.075em;
+    color:#4f5869;
 }
 
-.idea-head p{
-    margin-top:25px;
 
-    color:#77747c;
+.idea-description{
+
+    max-width:620px;
+
+    margin-top:30px;
+
+    color:#747d8c;
 
     font-size:16px;
 
     line-height:1.8;
 }
 
-.steps{
-    margin-top:65px;
+
+.idea-steps{
+
+    margin-top:60px;
 
     display:grid;
-    grid-template-columns:repeat(3,1fr);
 
-    gap:20px;
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:18px;
 }
 
-.step-card{
-    min-height:230px;
+
+.idea-card{
 
     padding:30px;
 
-    border-radius:28px;
+    min-height:220px;
+
+    border-radius:22px;
+
+    border:1px solid var(--line);
+
+    background:
+        rgba(255,255,255,.025);
 
     position:relative;
 
     overflow:hidden;
+
+    transition:.3s;
 }
 
-.step-card:nth-child(1){
-    background:#e6edff;
+
+.idea-card:hover{
+
+    transform:translateY(-5px);
+
+    border-color:
+        rgba(109,140,255,.3);
+
+    background:
+        rgba(109,140,255,.04);
 }
 
-.step-card:nth-child(2){
-    background:#ffe7eb;
-}
 
-.step-card:nth-child(3){
-    background:#eee5ff;
-}
+.idea-number{
 
-.step-num{
     font-family:"Space Mono",monospace;
 
-    font-size:10px;
+    font-size:9px;
 
-    color:#74717b;
+    color:#555e6e;
 
     margin-bottom:40px;
 }
 
-.step-card h3{
-    font-size:28px;
+
+.idea-card h3{
+
+    font-size:25px;
 
     letter-spacing:-.04em;
 }
 
-.step-card p{
+
+.idea-card p{
+
     margin-top:10px;
 
-    color:#706d76;
+    color:#737c8b;
 
-    line-height:1.6;
+    font-size:12px;
 
-    font-size:13px;
+    line-height:1.7;
 }
 
-.step-shape{
+
+.card-orb{
+
     position:absolute;
 
-    width:110px;
-    height:110px;
+    width:90px;
+    height:90px;
 
     border-radius:50%;
 
     right:-30px;
     bottom:-35px;
 
-    background:rgba(255,255,255,.45);
+    background:
+        rgba(109,140,255,.08);
+
+    box-shadow:
+        0 0 50px
+            rgba(109,140,255,.08);
 }
 
 
 /* =========================================================
-   KNN LAB
+   LAB HEADER
 ========================================================= */
 
 .lab{
-    padding:110px 5vw 130px;
 
-    background:#fffaf4;
+    padding:120px 4vw 140px;
+
+    background:
+
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(109,140,255,.08),
+            transparent 40%
+        ),
+
+        #080b12;
 }
 
-.lab-heading{
+
+.lab-head{
+
+    margin:0 3vw 45px;
+
     display:flex;
-    justify-content:space-between;
+
     align-items:flex-end;
 
-    margin-bottom:45px;
+    justify-content:space-between;
 }
 
-.lab-heading h2{
-    font-size:clamp(50px,7vw,100px);
+
+.lab-head h2{
+
+    font-size:
+        clamp(50px,7vw,100px);
 
     line-height:.8;
 
     letter-spacing:-.08em;
 }
 
-.lab-heading h2 span{
-    color:#aaa6ad;
+
+.lab-head h2 span{
+
+    color:#4c5565;
 }
+
 
 .lab-note{
+
     max-width:310px;
 
-    color:#77747d;
+    color:#737c8a;
 
-    font-size:13px;
-    line-height:1.7;
+    font-size:12px;
+
+    line-height:1.8;
 }
 
 
-/* main playground */
+/* =========================================================
+   PLAYGROUND
+========================================================= */
 
 .playground{
-    min-height:700px;
 
-    border-radius:38px;
-
-    background:
-        radial-gradient(
-            circle at 35% 40%,
-            rgba(120,151,255,.18),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at 75% 70%,
-            rgba(243,156,174,.14),
-            transparent 35%
-        ),
-        #eeeaf5;
-
-    box-shadow:var(--shadow);
+    min-height:720px;
 
     display:grid;
 
-    grid-template-columns:minmax(0,1fr) 340px;
+    grid-template-columns:
+        minmax(0,1fr)
+        350px;
 
     overflow:hidden;
+
+    border-radius:30px;
+
+    border:1px solid var(--line);
+
+    background:#0c1018;
+
+    box-shadow:var(--shadow);
 }
 
 
@@ -658,14 +892,25 @@ nav{
 ========================================================= */
 
 .graph{
-    min-height:700px;
 
     position:relative;
 
+    min-height:720px;
+
     overflow:hidden;
+
+    background:
+
+        radial-gradient(
+            circle at 48% 53%,
+            rgba(109,140,255,.10),
+            transparent 34%
+        );
 }
 
+
 .graph::before{
+
     content:"";
 
     position:absolute;
@@ -673,13 +918,15 @@ nav{
     inset:0;
 
     background-image:
+
         linear-gradient(
-            rgba(80,76,100,.07) 1px,
+            rgba(255,255,255,.035) 1px,
             transparent 1px
         ),
+
         linear-gradient(
             90deg,
-            rgba(80,76,100,.07) 1px,
+            rgba(255,255,255,.035) 1px,
             transparent 1px
         );
 
@@ -689,41 +936,53 @@ nav{
         radial-gradient(
             circle,
             black,
-            transparent 78%
+            transparent 82%
         );
 }
 
-.graph-label{
+
+.graph-top{
+
     position:absolute;
+
+    left:25px;
+    top:25px;
 
     font-family:"Space Mono",monospace;
 
-    font-size:9px;
+    font-size:8px;
 
-    color:#85818d;
+    color:#505969;
 
-    z-index:4;
+    z-index:3;
 }
 
-.graph-label.top{
-    top:25px;
-    left:30px;
-}
 
-.graph-label.bottom{
+.graph-bottom{
+
+    position:absolute;
+
+    right:25px;
     bottom:25px;
-    right:30px;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:8px;
+
+    color:#505969;
+
+    z-index:3;
 }
 
-
-/* SVG */
 
 .graph svg{
+
     position:absolute;
 
     inset:0;
 
     width:100%;
+
     height:100%;
 }
 
@@ -731,12 +990,16 @@ nav{
 /* axes */
 
 .axis{
-    stroke:rgba(50,48,60,.18);
+
+    stroke:#323a48;
+
     stroke-width:1;
 }
 
+
 .axis-text{
-    fill:#898591;
+
+    fill:#555e6d;
 
     font-family:"Space Mono",monospace;
 
@@ -744,49 +1007,63 @@ nav{
 }
 
 
-/* connecting lines */
+/* lines */
 
 .distance-line{
-    stroke:#9a98a4;
 
-    stroke-width:2;
+    stroke:#4f5868;
 
-    stroke-dasharray:8 8;
+    stroke-width:1.5;
+
+    stroke-dasharray:7 8;
 
     opacity:0;
 
     transition:
         opacity .7s,
-        stroke .4s,
-        stroke-width .4s;
+        stroke .5s,
+        stroke-width .5s;
 }
 
+
 .distance-line.show{
+
     opacity:1;
 }
 
+
 .distance-line.selected{
-    stroke:var(--blue-dark);
+
+    stroke:var(--blue);
 
     stroke-width:3;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(109,140,255,.35)
+        );
 }
 
 
-/* distance labels */
+/* distance */
 
-.distance-text{
-    fill:#77737f;
+.distance-label{
+
+    fill:#8c95a4;
 
     font-family:"Space Mono",monospace;
 
-    font-size:12px;
+    font-size:11px;
 
     opacity:0;
 
     transition:.5s;
 }
 
-.distance-text.show{
+
+.distance-label.show{
+
     opacity:1;
 }
 
@@ -794,39 +1071,57 @@ nav{
 /* points */
 
 .data-point{
-    transition:.5s;
+
+    stroke:#080b12;
+
+    stroke-width:5;
 
     filter:
         drop-shadow(
-            0 10px 12px rgba(50,45,70,.16)
+            0 8px 10px rgba(0,0,0,.3)
         );
 }
 
-.normal{
+
+.normal-point{
+
     fill:var(--blue);
+
+    filter:
+        drop-shadow(
+            0 0 12px
+            rgba(109,140,255,.5)
+        );
 }
 
-.risk{
+
+.risk-point{
+
     fill:var(--pink);
+
+    filter:
+        drop-shadow(
+            0 0 12px
+            rgba(255,113,132,.4)
+        );
 }
 
-.query{
+
+.query-point{
+
     fill:var(--yellow);
+
+    filter:
+        drop-shadow(
+            0 0 17px
+            rgba(255,215,106,.55)
+        );
 }
 
-.point-ring{
-    fill:none;
-
-    stroke:white;
-
-    stroke-width:5;
-}
-
-
-/* labels */
 
 .point-label{
-    fill:#34323b;
+
+    fill:#e6e9ef;
 
     font-family:"Space Mono",monospace;
 
@@ -835,8 +1130,10 @@ nav{
     font-weight:bold;
 }
 
+
 .point-coord{
-    fill:#85818d;
+
+    fill:#5f6877;
 
     font-family:"Space Mono",monospace;
 
@@ -847,140 +1144,238 @@ nav{
 /* radius */
 
 .radius{
-    fill:rgba(120,151,255,.08);
 
-    stroke:var(--blue-dark);
+    fill:
+        rgba(109,140,255,.045);
 
-    stroke-width:2;
+    stroke:var(--blue);
 
-    stroke-dasharray:10 8;
+    stroke-width:1.5;
+
+    stroke-dasharray:9 9;
 
     opacity:0;
 
     transition:.8s;
+
+    filter:
+        drop-shadow(
+            0 0 10px
+            rgba(109,140,255,.15)
+        );
 }
 
+
 .radius.show{
+
     opacity:1;
 }
 
 
 /* =========================================================
-   SIDE INFO
+   TIE
+========================================================= */
+
+.tie{
+
+    position:absolute;
+
+    right:7%;
+
+    top:14%;
+
+    padding:10px 15px;
+
+    border-radius:100px;
+
+    background:
+        rgba(12,16,24,.75);
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    backdrop-filter:blur(15px);
+
+    font-family:"Space Mono",monospace;
+
+    font-size:8px;
+
+    color:#737c8a;
+
+    opacity:0;
+
+    transform:translateY(10px);
+
+    transition:.5s;
+
+    z-index:5;
+}
+
+
+.tie.show{
+
+    opacity:1;
+
+    transform:translateY(0);
+}
+
+
+.tie strong{
+
+    color:#dfe3ea;
+}
+
+
+/* =========================================================
+   INFO PANEL
 ========================================================= */
 
 .info{
-    padding:35px;
 
-    background:rgba(255,255,255,.55);
+    padding:34px;
 
-    backdrop-filter:blur(20px);
+    background:
+        rgba(15,19,28,.88);
 
-    border-left:1px solid rgba(255,255,255,.6);
+    backdrop-filter:blur(25px);
+
+    border-left:1px solid var(--line);
 
     display:flex;
+
     flex-direction:column;
 }
 
+
 .info-top{
+
     display:flex;
+
     justify-content:space-between;
+
+    color:#5e6878;
 
     font-family:"Space Mono",monospace;
 
-    color:#96929d;
-
-    font-size:9px;
+    font-size:8px;
 }
+
 
 .info h3{
+
     margin-top:35px;
 
-    font-size:39px;
+    font-size:40px;
 
-    line-height:.92;
+    line-height:.9;
 
-    letter-spacing:-.06em;
+    letter-spacing:-.065em;
 }
 
+
 .info-description{
+
     margin-top:18px;
 
-    color:#77737e;
+    color:#788291;
 
     font-size:13px;
 
-    line-height:1.7;
+    line-height:1.75;
 }
 
 
-/* distance list */
+/* distance rows */
 
 .distance-list{
-    margin-top:30px;
+
+    margin-top:32px;
+
+    border-top:1px solid var(--line);
 }
 
-.distance-item{
-    padding:14px 0;
 
-    border-bottom:1px solid rgba(50,50,60,.08);
+.distance-row{
 
     display:grid;
 
-    grid-template-columns:30px 1fr auto;
+    grid-template-columns:
+        30px 1fr auto;
 
     align-items:center;
 
+    padding:15px 0;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.055);
+
+    color:#5e6775;
+
     font-family:"Space Mono",monospace;
 
-    font-size:10px;
-
-    color:#918d97;
+    font-size:9px;
 
     transition:.3s;
 }
 
-.distance-item.active{
-    color:#34323b;
-}
 
-.distance-item.active .distance-value{
-    color:var(--blue-dark);
-}
+.distance-row.active{
 
-.distance-item.risk .distance-value{
-    color:#df7e91;
+    color:#e7eaf0;
 }
 
 
-/* K control */
+.distance-row.active
+.distance-value{
+
+    color:var(--blue);
+}
+
+
+.distance-row.risk
+.distance-value{
+
+    color:var(--pink);
+}
+
+
+/* =========================================================
+   CONTROL
+========================================================= */
 
 .control{
+
     margin-top:auto;
 
     padding-top:30px;
 }
 
+
 .control-label{
+
     font-family:"Space Mono",monospace;
 
-    font-size:9px;
+    color:#5d6674;
 
-    color:#98949d;
+    font-size:8px;
 
     margin-bottom:10px;
 }
 
-.k-display{
+
+.k-top{
+
     display:flex;
 
-    align-items:flex-end;
-
     justify-content:space-between;
+
+    align-items:flex-end;
 }
 
+
 .k-number{
-    font-size:72px;
+
+    font-size:70px;
 
     line-height:.75;
 
@@ -989,40 +1384,46 @@ nav{
     font-weight:700;
 }
 
-.k-description{
+
+.k-label{
+
     font-family:"Space Mono",monospace;
 
-    font-size:9px;
+    color:#5d6674;
+
+    font-size:8px;
 
     line-height:1.5;
-
-    color:#8e8a94;
 }
 
-input[type=range]{
+
+input[type="range"]{
+
     width:100%;
 
-    margin-top:24px;
+    margin-top:23px;
 
-    accent-color:var(--blue-dark);
+    accent-color:var(--blue);
 }
+
 
 .action{
-    width:100%;
 
-    border:0;
+    width:100%;
 
     margin-top:18px;
 
     padding:16px;
 
-    border-radius:14px;
+    border:0;
 
-    background:var(--ink);
+    border-radius:12px;
 
-    color:white;
+    background:#eef1f8;
 
-    font-size:12px;
+    color:#0a0d13;
+
+    font-size:11px;
 
     font-weight:700;
 
@@ -1031,68 +1432,36 @@ input[type=range]{
     transition:.25s;
 }
 
+
 .action:hover{
+
     transform:translateY(-2px);
+
+    box-shadow:
+        0 15px 35px
+        rgba(255,255,255,.07);
 }
 
+
 .reset{
+
     width:100%;
 
     margin-top:8px;
 
     padding:12px;
 
-    border:0;
+    border:1px solid var(--line);
+
+    border-radius:10px;
 
     background:transparent;
 
-    color:#8b8790;
-
-    cursor:pointer;
-
-    font-size:10px;
-}
-
-
-/* tie */
-
-.tie{
-    position:absolute;
-
-    top:90px;
-    right:70px;
-
-    padding:10px 15px;
-
-    border-radius:100px;
-
-    background:rgba(255,255,255,.72);
-
-    backdrop-filter:blur(15px);
-
-    box-shadow:0 10px 25px rgba(50,45,70,.08);
-
-    font-family:"Space Mono",monospace;
+    color:#5f6877;
 
     font-size:9px;
 
-    color:#89858f;
-
-    opacity:0;
-
-    transform:translateY(10px);
-
-    transition:.5s;
-}
-
-.tie.show{
-    opacity:1;
-
-    transform:translateY(0);
-}
-
-.tie strong{
-    color:#4b4851;
+    cursor:pointer;
 }
 
 
@@ -1101,83 +1470,89 @@ input[type=range]{
 ========================================================= */
 
 .math{
+
     padding:120px 7vw;
 
-    background:var(--ink);
+    background:#0d1119;
 
-    color:white;
-
-    position:relative;
-
-    overflow:hidden;
+    border-top:1px solid var(--line);
 }
 
-.math::after{
-    content:"";
-
-    position:absolute;
-
-    width:450px;
-    height:450px;
-
-    border-radius:50%;
-
-    right:-150px;
-    top:-150px;
-
-    background:rgba(120,151,255,.16);
-
-    filter:blur(50px);
-}
 
 .math-grid{
-    position:relative;
-    z-index:2;
 
     display:grid;
 
-    grid-template-columns:.8fr 1.2fr;
+    grid-template-columns:
+        .8fr
+        1.2fr;
 
-    gap:9vw;
+    gap:10vw;
 
     align-items:center;
 }
 
-.math-title{
-    font-size:clamp(50px,7vw,100px);
 
-    line-height:.82;
+.math-title{
+
+    font-size:
+        clamp(50px,7vw,100px);
+
+    line-height:.8;
 
     letter-spacing:-.08em;
 }
 
+
 .math-title span{
-    color:var(--blue-light);
+
+    color:#596373;
 }
 
-.formula{
-    padding:35px 0;
 
-    border-top:1px solid rgba(255,255,255,.15);
-    border-bottom:1px solid rgba(255,255,255,.15);
+.formula-box{
+
+    padding:32px 0;
+
+    border-top:1px solid var(--line);
+
+    border-bottom:1px solid var(--line);
 
     font-family:"Space Mono",monospace;
+}
 
-    font-size:20px;
+
+.formula-label{
+
+    color:#5c6573;
+
+    font-size:8px;
+
+    margin-bottom:15px;
+}
+
+
+.formula{
+
+    font-size:18px;
 
     line-height:2;
 }
 
-.formula .highlight{
-    color:var(--yellow);
+
+.formula strong{
+
+    color:var(--blue2);
 }
 
-.math-text{
-    margin-top:30px;
 
-    color:#a19ea8;
+.math-copy{
 
-    font-size:14px;
+    margin-top:28px;
+
+    color:#747e8d;
+
+    font-size:13px;
 
     line-height:1.9;
 }
@@ -1188,61 +1563,81 @@ input[type=range]{
 ========================================================= */
 
 .vote-section{
+
     padding:120px 7vw;
 
-    background:#f8f3eb;
+    background:#0a0d14;
+
+    border-top:1px solid var(--line);
 }
 
+
 .vote-heading{
+
     max-width:700px;
 }
 
-.vote-heading h2{
-    font-size:clamp(50px,7vw,100px);
 
-    line-height:.82;
+.vote-heading h2{
+
+    font-size:
+        clamp(50px,7vw,100px);
+
+    line-height:.8;
 
     letter-spacing:-.08em;
 }
 
+
 .vote-heading p{
+
     margin-top:25px;
 
-    color:#77737b;
+    color:#737d8b;
 
     line-height:1.8;
+
+    font-size:14px;
 }
 
-.vote-area{
-    margin-top:70px;
+
+.votes{
+
+    margin-top:65px;
 
     display:grid;
 
     grid-template-columns:1fr 1fr;
 
-    gap:25px;
+    gap:20px;
 }
 
+
 .vote-card{
-    background:white;
 
     padding:35px;
 
-    border-radius:30px;
+    border-radius:25px;
 
-    box-shadow:
-        0 20px 50px rgba(50,45,65,.08);
+    border:1px solid var(--line);
+
+    background:
+        rgba(255,255,255,.025);
 }
 
-.vote-label{
+
+.vote-name{
+
     font-family:"Space Mono",monospace;
 
-    font-size:9px;
+    font-size:8px;
 
-    color:#89858f;
+    color:#697281;
 }
 
+
 .vote-number{
+
     margin-top:20px;
 
     font-size:100px;
@@ -1252,50 +1647,74 @@ input[type=range]{
     letter-spacing:-.09em;
 }
 
-.vote-card.normal-card .vote-number{
-    color:var(--blue-dark);
+
+.vote-card.normal
+.vote-number{
+
+    color:var(--blue);
 }
 
-.vote-card.risk-card .vote-number{
-    color:#df7e91;
+
+.vote-card.risk
+.vote-number{
+
+    color:var(--pink);
 }
+
 
 .vote-bar{
-    height:10px;
 
-    background:#eeeaf0;
+    height:8px;
+
+    margin-top:35px;
 
     border-radius:20px;
 
-    margin-top:35px;
+    background:#1d2330;
 
     overflow:hidden;
 }
 
+
 .vote-fill{
-    height:100%;
 
     width:0;
+
+    height:100%;
 
     border-radius:20px;
 
     transition:1.2s;
 }
 
-.normal-fill{
+
+.vote-fill.blue{
+
     background:var(--blue);
+
+    box-shadow:
+        0 0 20px
+        rgba(109,140,255,.3);
 }
 
-.risk-fill{
+
+.vote-fill.pink{
+
     background:var(--pink);
+
+    box-shadow:
+        0 0 20px
+        rgba(255,113,132,.25);
 }
+
 
 .vote-detail{
+
     margin-top:18px;
 
-    font-size:13px;
+    color:#727b89;
 
-    color:#77737b;
+    font-size:12px;
 }
 
 
@@ -1304,17 +1723,10 @@ input[type=range]{
 ========================================================= */
 
 .final{
+
     min-height:90vh;
 
     padding:120px 7vw;
-
-    background:
-        radial-gradient(
-            circle at 50% 40%,
-            #e6edff,
-            transparent 45%
-        ),
-        #fffaf4;
 
     display:flex;
 
@@ -1323,40 +1735,64 @@ input[type=range]{
     justify-content:center;
 
     text-align:center;
+
+    background:
+
+        radial-gradient(
+            circle at center,
+            rgba(109,140,255,.12),
+            transparent 40%
+        ),
+
+        #080b12;
+
+    border-top:1px solid var(--line);
 }
+
 
 .final-content{
-    max-width:1000px;
+
+    max-width:1100px;
 }
 
+
 .final-small{
+
     font-family:"Space Mono",monospace;
 
-    font-size:10px;
+    color:#5d6674;
 
-    color:#96919c;
+    font-size:9px;
 
-    letter-spacing:.15em;
+    letter-spacing:.16em;
 
     margin-bottom:35px;
 }
 
+
 .final h2{
-    font-size:clamp(80px,14vw,190px);
+
+    font-size:
+        clamp(80px,14vw,190px);
 
     line-height:.72;
 
     letter-spacing:-.1em;
 }
 
+
 .final h2 span{
-    color:var(--blue-dark);
+
+    color:var(--blue);
 
     text-shadow:
-        0 20px 50px rgba(88,117,232,.18);
+        0 0 70px
+        rgba(109,140,255,.2);
 }
 
-.final-equation{
+
+.final-proof{
+
     margin-top:55px;
 
     display:flex;
@@ -1365,53 +1801,65 @@ input[type=range]{
 
     align-items:center;
 
-    gap:15px;
+    gap:14px;
 }
 
-.final-number{
-    width:80px;
-    height:80px;
 
-    border-radius:24px;
+.proof{
+
+    width:85px;
+    height:85px;
+
+    border-radius:22px;
 
     display:grid;
+
     place-items:center;
 
-    background:white;
+    background:
+        rgba(255,255,255,.04);
 
-    box-shadow:0 15px 35px rgba(50,45,70,.1);
+    border:1px solid var(--line);
 
     font-size:35px;
 
     font-weight:700;
 }
 
-.final-number.blue{
-    color:var(--blue-dark);
+
+.proof.blue{
+
+    color:var(--blue);
 }
 
-.final-number.red{
-    color:#df7e91;
+
+.proof.pink{
+
+    color:var(--pink);
 }
 
-.final-vs{
+
+.vs{
+
+    color:#4e5766;
+
     font-family:"Space Mono",monospace;
 
-    color:#99959f;
-
-    font-size:10px;
+    font-size:9px;
 }
 
+
 .final-text{
-    max-width:500px;
+
+    max-width:520px;
 
     margin:30px auto 0;
 
-    color:#77737d;
+    color:#747e8d;
+
+    font-size:14px;
 
     line-height:1.8;
-
-    font-size:15px;
 }
 
 
@@ -1420,17 +1868,16 @@ input[type=range]{
 ========================================================= */
 
 footer{
+
     padding:25px 7vw;
 
     display:flex;
 
     justify-content:space-between;
 
-    background:#fffaf4;
+    border-top:1px solid var(--line);
 
-    border-top:1px solid rgba(40,40,50,.08);
-
-    color:#9b97a0;
+    color:#444c58;
 
     font-family:"Space Mono",monospace;
 
@@ -1445,95 +1892,98 @@ footer{
 @media(max-width:950px){
 
     .hero{
-        grid-template-columns:1fr;
 
-        padding-top:80px;
+        grid-template-columns:1fr;
     }
 
-    .hero-art{
-        height:500px;
-    }
+    .hero-visual{
 
-    .steps{
-        grid-template-columns:1fr;
+        height:450px;
     }
 
     .playground{
+
         grid-template-columns:1fr;
+    }
+
+    .graph{
+
+        min-height:600px;
     }
 
     .info{
+
         border-left:0;
-        border-top:1px solid rgba(50,50,60,.08);
-        min-height:570px;
+
+        border-top:1px solid var(--line);
+
+        min-height:600px;
     }
 
     .math-grid{
+
         grid-template-columns:1fr;
+
+        gap:50px;
     }
+
 }
 
 
 @media(max-width:650px){
 
     nav{
+
         padding:0 20px;
     }
 
-    .nav-right{
+    .nav-info{
+
         display:none;
     }
 
     .hero{
+
         padding:70px 25px;
     }
 
     .hero h1{
+
         font-size:70px;
     }
 
-    .hero-art{
-        height:400px;
+    .hero-visual{
+
+        height:350px;
     }
 
-    .orbit{
-        width:300px;
-        height:300px;
+    .orbit.one{
+
+        width:290px;
+        height:290px;
     }
 
     .orbit.two{
-        width:240px;
-        height:240px;
+
+        width:230px;
+        height:230px;
     }
 
     .orbit.three{
+
         width:350px;
         height:150px;
     }
 
-    .q-orb{
-        width:110px;
-        height:110px;
+    .hero-q{
+
+        width:100px;
+        height:100px;
     }
 
-    .sphere-a{
-        width:75px;
-        height:75px;
-    }
+    .hero-q strong{
 
-    .sphere-b{
-        width:60px;
-        height:60px;
-    }
-
-    .sphere-c{
-        width:80px;
-        height:80px;
-    }
-
-    .sphere-d{
-        width:55px;
-        height:55px;
+        font-size:22px;
     }
 
     .idea,
@@ -1541,29 +1991,51 @@ footer{
     .math,
     .vote-section,
     .final{
+
         padding-left:22px;
         padding-right:22px;
     }
 
+    .idea-steps{
+
+        grid-template-columns:1fr;
+    }
+
+    .lab-head{
+
+        display:block;
+    }
+
+    .lab-note{
+
+        margin-top:25px;
+    }
+
     .playground{
-        border-radius:25px;
+
+        border-radius:20px;
     }
 
     .graph{
+
         min-height:480px;
     }
 
     .info{
+
         padding:25px;
     }
 
-    .vote-area{
+    .votes{
+
         grid-template-columns:1fr;
     }
 
     .final h2{
-        font-size:80px;
+
+        font-size:78px;
     }
+
 }
 
 </style>
@@ -1572,8 +2044,9 @@ footer{
 
 <body>
 
-<div class="blob one"></div>
-<div class="blob two"></div>
+
+<div class="glow-blue"></div>
+<div class="glow-pink"></div>
 
 
 <!-- =====================================================
@@ -1582,22 +2055,27 @@ footer{
 
 <nav>
 
-    <div class="logo">
+    <div class="brand">
 
-        <div class="logo-circle">
+        <div class="brand-icon">
             K
         </div>
 
-        KNN / DATA PLAYGROUND
+        KNN / INTERACTIVE LAB
 
     </div>
 
 
-    <div class="nav-right">
+    <div class="nav-info">
 
         <span>CLASSIFICATION</span>
-        <span>INTERACTIVE</span>
-        <span>01 — 05</span>
+
+        <span class="live">
+            <i class="live-dot"></i>
+            LIVE VISUAL
+        </span>
+
+        <span>2026</span>
 
     </div>
 
@@ -1611,26 +2089,28 @@ footer{
 
 <section class="hero">
 
-    <div class="hero-text">
 
-        <div class="eyebrow">
+    <div>
+
+        <div class="hero-kicker">
             MACHINE LEARNING / K-NEAREST NEIGHBORS
         </div>
 
 
         <h1>
 
-            WHO IS<br>
-            <span class="blue">NEAR?</span>
+            HOW DOES<br>
+            <span>KNN DECIDE?</span>
 
         </h1>
 
 
         <p class="hero-description">
 
-            KNN มีวิธีคิดง่ายมาก:
-            <strong>ข้อมูลใหม่จะถูกจัดกลุ่ม
-            ตามเพื่อนบ้านที่อยู่ใกล้ที่สุด</strong>
+            เมื่อข้อมูลใหม่เข้ามา
+            KNN จะมองหา
+            <strong>เพื่อนบ้านที่อยู่ใกล้ที่สุด</strong>
+            แล้วใช้เสียงส่วนใหญ่ในการตัดสินใจ
 
         </p>
 
@@ -1639,45 +2119,53 @@ footer{
             class="hero-button"
             onclick="document.querySelector('.lab').scrollIntoView()"
         >
-            EXPLORE KNN ↓
+
+            EXPLORE THE MODEL ↓
+
         </button>
 
     </div>
 
 
-    <!-- decorative visual -->
 
-    <div class="hero-art">
+    <!-- HERO VISUAL -->
 
-        <div class="orbit"></div>
+    <div class="hero-visual">
+
+
+        <div class="orbit one"></div>
+
         <div class="orbit two"></div>
+
         <div class="orbit three"></div>
 
 
-        <div class="sphere sphere-a">
+        <div class="hero-point hp-a">
             A
         </div>
 
-        <div class="sphere sphere-b">
+        <div class="hero-point hp-b">
             C
         </div>
 
-        <div class="sphere sphere-c">
+        <div class="hero-point hp-c">
             D
         </div>
 
-        <div class="sphere sphere-d">
+        <div class="hero-point hp-d">
             B
         </div>
 
 
-        <div class="q-orb">
+        <div class="hero-q">
 
-            <div class="q-content">
+            <div>
 
                 <strong>Q</strong>
 
-                <span>NEW DATA</span>
+                <small>
+                    NEW DATA
+                </small>
 
             </div>
 
@@ -1695,32 +2183,35 @@ footer{
 
 <section class="idea">
 
-    <div class="idea-head">
 
-        <div class="eyebrow">
-            THE IDEA
-        </div>
+    <div class="hero-kicker">
+        THE IDEA
+    </div>
 
-        <h2>
-            KNN คิด<br>
-            แค่ 3 ขั้นตอน
-        </h2>
 
-        <p>
-            ไม่ต้องจำอะไรซับซ้อน
-            KNN เพียงวัดระยะ เลือกเพื่อนบ้าน
-            แล้วดูว่าใครมีเสียงมากที่สุด
-        </p>
+    <div class="idea-title">
+
+        KNN คิดง่ายกว่า<br>
+        <span>ที่คิด.</span>
 
     </div>
 
 
-    <div class="steps">
+    <p class="idea-description">
+
+        อัลกอริทึมจะไม่พยายามสร้างกฎที่ซับซ้อน
+        แต่จะถามคำถามง่าย ๆ ว่า
+        “ข้อมูลใหม่อยู่ใกล้ใครที่สุด?”
+
+    </p>
 
 
-        <div class="step-card">
+    <div class="idea-steps">
 
-            <div class="step-num">
+
+        <div class="idea-card">
+
+            <div class="idea-number">
                 01 / MEASURE
             </div>
 
@@ -1729,17 +2220,18 @@ footer{
             </h3>
 
             <p>
-                Q อยู่ใกล้ข้อมูลจุดไหนมากที่สุด?
+                คำนวณระยะจาก Q
+                ไปยังข้อมูลเดิมทุกจุด
             </p>
 
-            <div class="step-shape"></div>
+            <div class="card-orb"></div>
 
         </div>
 
 
-        <div class="step-card">
+        <div class="idea-card">
 
-            <div class="step-num">
+            <div class="idea-number">
                 02 / SELECT
             </div>
 
@@ -1748,17 +2240,18 @@ footer{
             </h3>
 
             <p>
-                เลือกเพื่อนบ้านที่ใกล้ที่สุด K จุด
+                เลือกเพื่อนบ้านที่ใกล้ที่สุด
+                ตามจำนวน K
             </p>
 
-            <div class="step-shape"></div>
+            <div class="card-orb"></div>
 
         </div>
 
 
-        <div class="step-card">
+        <div class="idea-card">
 
-            <div class="step-num">
+            <div class="idea-number">
                 03 / VOTE
             </div>
 
@@ -1767,10 +2260,11 @@ footer{
             </h3>
 
             <p>
-                คลาสที่มีเสียงมากที่สุดคือคำตอบ
+                คลาสที่มีเสียงมากที่สุด
+                จะเป็นผลลัพธ์
             </p>
 
-            <div class="step-shape"></div>
+            <div class="card-orb"></div>
 
         </div>
 
@@ -1782,21 +2276,24 @@ footer{
 
 <!-- =====================================================
      LAB
-===================================================== -->
+========================================================= -->
 
 <section class="lab">
 
-    <div class="lab-heading">
+
+    <div class="lab-head">
 
         <div>
 
-            <div class="eyebrow">
+            <div class="hero-kicker">
                 INTERACTIVE LAB
             </div>
 
             <h2>
+
                 WATCH KNN<br>
-                <span>DECIDE.</span>
+                <span>THINK.</span>
+
             </h2>
 
         </div>
@@ -1804,10 +2301,9 @@ footer{
 
         <p class="lab-note">
 
-            กดปุ่มด้านขวาทีละขั้น
-            แล้วดูว่า KNN เปลี่ยนจาก
-            “ข้อมูลที่ยังไม่รู้คำตอบ”
-            ไปเป็น “ผลการทำนาย” ได้อย่างไร
+            กดปุ่มด้านขวาเพื่อดูการทำงาน
+            ทีละขั้น ตั้งแต่ข้อมูล
+            ไปจนถึงคำตอบสุดท้าย
 
         </p>
 
@@ -1824,11 +2320,13 @@ footer{
 
         <div class="graph">
 
-            <div class="graph-label top">
+
+            <div class="graph-top">
                 FEATURE SPACE / X₁ × X₂
             </div>
 
-            <div class="graph-label bottom">
+
+            <div class="graph-bottom">
                 Q = NEW DATA
             </div>
 
@@ -1839,28 +2337,28 @@ footer{
             >
 
 
-                <!-- axes -->
+                <!-- AXES -->
 
                 <line
                     class="axis"
-                    x1="70"
+                    x1="65"
                     y1="580"
-                    x2="740"
+                    x2="750"
                     y2="580"
                 />
 
                 <line
                     class="axis"
-                    x1="70"
+                    x1="65"
                     y1="60"
-                    x2="70"
+                    x2="65"
                     y2="580"
                 />
 
 
                 <text
                     class="axis-text"
-                    x="720"
+                    x="725"
                     y="602"
                 >
                     X₁ →
@@ -1868,14 +2366,14 @@ footer{
 
                 <text
                     class="axis-text"
-                    x="48"
+                    x="43"
                     y="75"
                 >
                     X₂ ↑
                 </text>
 
 
-                <!-- distance lines -->
+                <!-- DISTANCE LINES -->
 
                 <line
                     id="lineA"
@@ -1914,29 +2412,29 @@ footer{
                 />
 
 
-                <!-- distance values -->
+                <!-- DISTANCE LABELS -->
 
                 <text
                     id="distA"
-                    class="distance-text"
-                    x="200"
-                    y="393"
+                    class="distance-label"
+                    x="202"
+                    y="395"
                 >
                     1.00
                 </text>
 
                 <text
                     id="distB"
-                    class="distance-text"
-                    x="286"
-                    y="370"
+                    class="distance-label"
+                    x="285"
+                    y="375"
                 >
                     1.00
                 </text>
 
                 <text
                     id="distC"
-                    class="distance-text"
+                    class="distance-label"
                     x="385"
                     y="245"
                 >
@@ -1945,7 +2443,7 @@ footer{
 
                 <text
                     id="distD"
-                    class="distance-text"
+                    class="distance-label"
                     x="455"
                     y="305"
                 >
@@ -1953,7 +2451,7 @@ footer{
                 </text>
 
 
-                <!-- K radius -->
+                <!-- K RADIUS -->
 
                 <circle
                     id="radius"
@@ -1967,7 +2465,7 @@ footer{
                 <!-- A -->
 
                 <circle
-                    class="data-point normal"
+                    class="data-point normal-point"
                     cx="170"
                     cy="410"
                     r="14"
@@ -1995,7 +2493,7 @@ footer{
                 <!-- B -->
 
                 <circle
-                    class="data-point normal"
+                    class="data-point normal-point"
                     cx="270"
                     cy="335"
                     r="14"
@@ -2023,7 +2521,7 @@ footer{
                 <!-- C -->
 
                 <circle
-                    class="data-point risk"
+                    class="data-point risk-point"
                     cx="570"
                     cy="110"
                     r="14"
@@ -2051,7 +2549,7 @@ footer{
                 <!-- D -->
 
                 <circle
-                    class="data-point risk"
+                    class="data-point risk-point"
                     cx="645"
                     cy="185"
                     r="14"
@@ -2079,14 +2577,7 @@ footer{
                 <!-- Q -->
 
                 <circle
-                    class="point-ring"
-                    cx="270"
-                    cy="410"
-                    r="23"
-                />
-
-                <circle
-                    class="data-point query"
+                    class="query-point"
                     cx="270"
                     cy="410"
                     r="17"
@@ -2101,7 +2592,6 @@ footer{
                     Q = (2,2)
                 </text>
 
-
             </svg>
 
 
@@ -2109,8 +2599,13 @@ footer{
                 class="tie"
                 id="tie"
             >
-                C + D &nbsp;·&nbsp;
-                <strong>5.00 TIE</strong>
+
+                C + D&nbsp; · &nbsp;
+
+                <strong>
+                    SAME DISTANCE 5.00
+                </strong>
+
             </div>
 
         </div>
@@ -2118,7 +2613,7 @@ footer{
 
 
         <!-- =================================================
-             INFO PANEL
+             INFO
         ================================================= -->
 
         <aside class="info">
@@ -2152,18 +2647,19 @@ footer{
 
                 Q คือข้อมูลใหม่
                 ที่เรายังไม่รู้ว่าอยู่ในกลุ่มไหน
-                เราจึงต้องให้ KNN ช่วยตัดสินใจ
+                เราจะใช้ข้อมูล A–D
+                เพื่อช่วยตัดสินใจ
 
             </p>
 
 
-            <!-- distances -->
+            <!-- DISTANCES -->
 
             <div class="distance-list">
 
 
                 <div
-                    class="distance-item"
+                    class="distance-row"
                     id="rowA"
                 >
 
@@ -2179,7 +2675,7 @@ footer{
 
 
                 <div
-                    class="distance-item"
+                    class="distance-row"
                     id="rowB"
                 >
 
@@ -2195,7 +2691,7 @@ footer{
 
 
                 <div
-                    class="distance-item risk"
+                    class="distance-row risk"
                     id="rowC"
                 >
 
@@ -2211,7 +2707,7 @@ footer{
 
 
                 <div
-                    class="distance-item risk"
+                    class="distance-row risk"
                     id="rowD"
                 >
 
@@ -2228,16 +2724,17 @@ footer{
             </div>
 
 
-            <!-- K -->
+            <!-- CONTROL -->
 
             <div class="control">
+
 
                 <div class="control-label">
                     NUMBER OF NEIGHBORS
                 </div>
 
 
-                <div class="k-display">
+                <div class="k-top">
 
                     <div
                         class="k-number"
@@ -2246,7 +2743,7 @@ footer{
                         3
                     </div>
 
-                    <div class="k-description">
+                    <div class="k-label">
                         K<br>
                         NEAREST
                     </div>
@@ -2290,23 +2787,24 @@ footer{
 
 <!-- =====================================================
      MATH
-===================================================== -->
+========================================================= -->
 
 <section class="math">
+
 
     <div class="math-grid">
 
 
         <div>
 
-            <div class="eyebrow">
+            <div class="hero-kicker">
                 THE MATH
             </div>
 
             <div class="math-title">
 
-                Just<br>
-                <span>distance.</span>
+                JUST<br>
+                <span>DISTANCE.</span>
 
             </div>
 
@@ -2315,18 +2813,28 @@ footer{
 
         <div>
 
-            <div class="formula">
 
-                d(P,Q) =
+            <div class="formula-box">
 
-                <span class="highlight">
-                    √[(p₁−q₁)² + (p₂−q₂)²]
-                </span>
+                <div class="formula-label">
+                    EUCLIDEAN DISTANCE
+                </div>
+
+
+                <div class="formula">
+
+                    d(P,Q) =
+
+                    <strong>
+                        √[(p₁−q₁)² + (p₂−q₂)²]
+                    </strong>
+
+                </div>
 
             </div>
 
 
-            <p class="math-text">
+            <p class="math-copy">
 
                 สำหรับ Q = (2,2)
 
@@ -2339,9 +2847,8 @@ footer{
 
                 <br><br>
 
-                <strong style="color:white;">
-                    ยิ่งระยะน้อย = ยิ่งใกล้ Q
-                </strong>
+                ยิ่งระยะน้อย
+                หมายถึงยิ่งอยู่ใกล้ Q
 
             </p>
 
@@ -2355,51 +2862,61 @@ footer{
 
 <!-- =====================================================
      VOTE
-===================================================== -->
+========================================================= -->
 
 <section class="vote-section">
 
+
     <div class="vote-heading">
 
-        <div class="eyebrow">
+        <div class="hero-kicker">
             MAJORITY VOTE
         </div>
 
+
         <h2>
-            Let the<br>
-            neighbors vote.
+
+            LET THEM<br>
+            VOTE.
+
         </h2>
 
+
         <p>
+
             กำหนด K = 3
             เราจึงใช้เพื่อนบ้านที่ใกล้ที่สุด 3 จุด
-            แล้วนับว่าแต่ละ class มีเสียงเท่าไร
+            แล้วนับว่า class ไหนมีเสียงมากกว่า
+
         </p>
 
     </div>
 
 
-    <div class="vote-area">
+    <div class="votes">
 
 
-        <div class="vote-card normal-card">
+        <div class="vote-card normal">
 
-            <div class="vote-label">
+            <div class="vote-name">
                 NORMAL
             </div>
+
 
             <div class="vote-number">
                 2
             </div>
 
+
             <div class="vote-bar">
 
                 <div
                     id="normalFill"
-                    class="vote-fill normal-fill"
+                    class="vote-fill blue"
                 ></div>
 
             </div>
+
 
             <div class="vote-detail">
                 A + B
@@ -2408,24 +2925,27 @@ footer{
         </div>
 
 
-        <div class="vote-card risk-card">
+        <div class="vote-card risk">
 
-            <div class="vote-label">
+            <div class="vote-name">
                 HIGH RISK
             </div>
+
 
             <div class="vote-number">
                 1
             </div>
 
+
             <div class="vote-bar">
 
                 <div
                     id="riskFill"
-                    class="vote-fill risk-fill"
+                    class="vote-fill pink"
                 ></div>
 
             </div>
+
 
             <div class="vote-detail">
                 C หรือ D
@@ -2441,11 +2961,13 @@ footer{
 
 <!-- =====================================================
      FINAL
-===================================================== -->
+========================================================= -->
 
 <section class="final">
 
+
     <div class="final-content">
+
 
         <div class="final-small">
             FINAL PREDICTION / K = 3
@@ -2453,21 +2975,26 @@ footer{
 
 
         <h2>
+
             <span>NORMAL</span>
+
         </h2>
 
 
-        <div class="final-equation">
+        <div class="final-proof">
 
-            <div class="final-number blue">
+
+            <div class="proof blue">
                 2
             </div>
 
-            <div class="final-vs">
+
+            <div class="vs">
                 VS
             </div>
 
-            <div class="final-number red">
+
+            <div class="proof pink">
                 1
             </div>
 
@@ -2476,13 +3003,13 @@ footer{
 
         <p class="final-text">
 
-            <strong style="color:#5875e8;">
+            <strong style="color:#6d8cff;">
                 2 NORMAL
             </strong>
 
             มากกว่า
 
-            <strong style="color:#df7e91;">
+            <strong style="color:#ff7184;">
                 1 HIGH RISK
             </strong>
 
@@ -2490,13 +3017,13 @@ footer{
 
             ดังนั้น KNN จึงจัด
 
-            <strong>
+            <strong style="color:#fff;">
                 Q = (2,2)
             </strong>
 
-            เป็นกลุ่ม
+            ให้อยู่ในกลุ่ม
 
-            <strong style="color:#5875e8;">
+            <strong style="color:#6d8cff;">
                 “ปกติ”
             </strong>
 
@@ -2511,7 +3038,7 @@ footer{
 <footer>
 
     <span>
-        KNN / DATA PLAYGROUND
+        KNN / INTERACTIVE ML
     </span>
 
     <span>
@@ -2529,6 +3056,7 @@ footer{
 ========================================================= */
 
 let step = 1;
+
 let K = 3;
 
 
@@ -2574,7 +3102,7 @@ const lines = {
 };
 
 
-const distances = {
+const labels = {
 
     A:document.getElementById("distA"),
     B:document.getElementById("distB"),
@@ -2594,8 +3122,9 @@ const rows = {
 };
 
 
+
 /* =========================================================
-   K SLIDER
+   SLIDER
 ========================================================= */
 
 slider.addEventListener("input",()=>{
@@ -2605,36 +3134,39 @@ slider.addEventListener("input",()=>{
     kNumber.textContent = K;
 
     if(step === 3){
+
         updateStep();
+
     }
 
 });
 
 
+
 /* =========================================================
-   CLEAR GRAPH
+   CLEAR
 ========================================================= */
 
-function clearGraph(){
+function clearVisual(){
 
-    Object.values(lines).forEach(line=>{
+    Object.values(lines).forEach(el=>{
 
-        line.classList.remove("show");
-        line.classList.remove("selected");
-
-    });
-
-
-    Object.values(distances).forEach(text=>{
-
-        text.classList.remove("show");
+        el.classList.remove("show");
+        el.classList.remove("selected");
 
     });
 
 
-    Object.values(rows).forEach(row=>{
+    Object.values(labels).forEach(el=>{
 
-        row.classList.remove("active");
+        el.classList.remove("show");
+
+    });
+
+
+    Object.values(rows).forEach(el=>{
+
+        el.classList.remove("active");
 
     });
 
@@ -2648,13 +3180,14 @@ function clearGraph(){
 }
 
 
+
 /* =========================================================
-   UPDATE
+   UPDATE STEP
 ========================================================= */
 
 function updateStep(){
 
-    clearGraph();
+    clearVisual();
 
 
     stepNumber.textContent =
@@ -2673,7 +3206,8 @@ function updateStep(){
         stepDescription.innerHTML =
             "Q คือข้อมูลใหม่ " +
             "ที่เรายังไม่รู้ว่าอยู่ในกลุ่มไหน " +
-            "เราจึงต้องให้ KNN ช่วยตัดสินใจ";
+            "เราจะใช้ข้อมูล A–D " +
+            "เพื่อช่วยตัดสินใจ";
 
         nextBtn.textContent =
             "MEASURE DISTANCE →";
@@ -2693,28 +3227,30 @@ function updateStep(){
         stepDescription.innerHTML =
             "KNN วัดระยะจาก Q " +
             "ไปยังข้อมูลทุกจุด " +
-            "ด้วย Euclidean Distance";
+            "เพื่อดูว่าใครอยู่ใกล้ที่สุด";
 
         nextBtn.textContent =
             "FIND THE NEAREST →";
 
 
-        ["A","B","C","D"].forEach((key,index)=>{
+        ["A","B","C","D"].forEach(
+            (key,index)=>{
 
-            setTimeout(()=>{
+                setTimeout(()=>{
 
-                lines[key]
-                    .classList.add("show");
+                    lines[key]
+                        .classList.add("show");
 
-                distances[key]
-                    .classList.add("show");
+                    labels[key]
+                        .classList.add("show");
 
-                rows[key]
-                    .classList.add("active");
+                    rows[key]
+                        .classList.add("active");
 
-            },index*220);
+                },index*180);
 
-        });
+            }
+        );
 
     }
 
@@ -2736,16 +3272,16 @@ function updateStep(){
             "LET THEM VOTE →";
 
 
-        Object.values(lines).forEach(line=>{
+        Object.values(lines).forEach(el=>{
 
-            line.classList.add("show");
+            el.classList.add("show");
 
         });
 
 
-        Object.values(distances).forEach(text=>{
+        Object.values(labels).forEach(el=>{
 
-            text.classList.add("show");
+            el.classList.add("show");
 
         });
 
@@ -2810,11 +3346,15 @@ function updateStep(){
         rows.B.classList.add("active");
 
         if(K >= 3){
+
             rows.C.classList.add("active");
+
         }
 
         if(K >= 4){
+
             rows.D.classList.add("active");
+
         }
 
 
@@ -2845,7 +3385,7 @@ function updateStep(){
         stepDescription.innerHTML =
             "เสียงส่วนใหญ่เป็น NORMAL " +
             "ดังนั้น Q = (2,2) " +
-            "จึงถูกจัดอยู่ในกลุ่ม “ปกติ”";
+            "จึงถูกจัดเป็น “ปกติ”";
 
         nextBtn.textContent =
             "RESTART ↻";
@@ -2862,6 +3402,7 @@ function updateStep(){
     }
 
 }
+
 
 
 /* =========================================================
@@ -2893,6 +3434,7 @@ nextBtn.addEventListener("click",()=>{
 });
 
 
+
 /* =========================================================
    RESET
 ========================================================= */
@@ -2918,6 +3460,7 @@ resetBtn.addEventListener("click",()=>{
     updateStep();
 
 });
+
 
 
 /* =========================================================
@@ -2947,3 +3490,4 @@ updateStep();
 
 </body>
 </html>
+```

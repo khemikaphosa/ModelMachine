@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNN — Nearest Neighbors</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --bg:#0b0d12;
+    --panel:#11141b;
+    --panel2:#161a22;
+    --text:#f5f5f2;
+    --muted:#858b99;
+    --faint:#3b414d;
+
+    --blue:#7c9cff;
+    --blue2:#b5c5ff;
+
+    --red:#ff7279;
+    --red2:#ffc0c3;
+
+    --gold:#ffd66b;
+
+    --border:rgba(255,255,255,.09);
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:Manrope,sans-serif;
+    overflow-x:hidden;
+}
+
+button,
+input{
+    font-family:inherit;
+}
+
+
+/* =====================================================
+   BACKGROUND
+===================================================== */
+
+.noise{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:100;
+    opacity:.035;
+
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+
+/* =====================================================
+   NAV
+===================================================== */
+
+.nav{
+    height:76px;
+    padding:0 4.5vw;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border-bottom:1px solid var(--border);
+}
+
+.nav-left{
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    font-family:"Space Mono",monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+}
+
+.logo{
+    width:34px;
+    height:34px;
+
+    display:grid;
+    place-items:center;
+
+    border:1px solid var(--blue);
+    border-radius:50%;
+
+    color:var(--blue);
+
+    box-shadow:
+        0 0 30px rgba(124,156,255,.15);
+}
+
+.nav-right{
+    display:flex;
+    gap:28px;
+
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+    color:#5f6673;
+}
+
+.nav-right span:first-child{
+    color:#8994a5;
+}
+
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero{
+    min-height:calc(100vh - 76px);
+
+    padding:8vh 7vw;
+
+    position:relative;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.hero-number{
+    position:absolute;
+    right:6vw;
+    top:9vh;
+
+    font-family:"Space Mono",monospace;
+    font-size:10px;
+
+    color:#4c5360;
+}
+
+.hero-kicker{
+    color:#6e7684;
+
+    font-family:"Space Mono",monospace;
+    font-size:10px;
+    letter-spacing:.2em;
+
+    margin-bottom:30px;
+}
+
+.hero h1{
+    font-size:clamp(65px,11vw,165px);
+
+    line-height:.82;
+
+    letter-spacing:-.09em;
+
+    max-width:1100px;
+}
+
+.hero h1 em{
+    color:var(--blue);
+    font-style:normal;
+}
+
+.hero-sub{
+    margin-top:55px;
+
+    max-width:500px;
+
+    color:#858c99;
+
+    font-size:17px;
+    line-height:1.8;
+}
+
+.hero-sub b{
+    color:#fff;
+}
+
+
+/* =====================================================
+   CONCEPT STRIP
+===================================================== */
+
+.concept-strip{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+}
+
+.concept-item{
+    padding:32px 5vw;
+
+    border-right:1px solid var(--border);
+}
+
+.concept-item:last-child{
+    border-right:0;
+}
+
+.concept-num{
+    color:#555c69;
+
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+
+    margin-bottom:15px;
+}
+
+.concept-item h3{
+    font-size:17px;
+    font-weight:600;
+
+    margin-bottom:7px;
+}
+
+.concept-item p{
+    color:#707784;
+    font-size:12px;
+    line-height:1.6;
+}
+
+
+/* =====================================================
+   LAB INTRO
+===================================================== */
+
+.lab-intro{
+    padding:120px 7vw 70px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+}
+
+.lab-intro h2{
+    font-size:clamp(50px,7vw,105px);
+
+    letter-spacing:-.08em;
+    line-height:.8;
+}
+
+.lab-intro h2 span{
+    color:#555c68;
+}
+
+.lab-desc{
+    max-width:330px;
+
+    color:#7e8693;
+
+    font-size:13px;
+    line-height:1.8;
+}
+
+
+/* =====================================================
+   LAB
+===================================================== */
+
+.lab{
+    margin:0 3vw 120px;
+
+    min-height:750px;
+
+    border:1px solid var(--border);
+    border-radius:28px;
+
+    background:
+        radial-gradient(
+            circle at 40% 45%,
+            rgba(83,112,220,.11),
+            transparent 38%
+        ),
+        #0e1117;
+
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 350px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 50px 120px rgba(0,0,0,.45);
+}
+
+
+/* =====================================================
+   VISUAL AREA
+===================================================== */
+
+.visual{
+    position:relative;
+
+    min-height:750px;
+
+    overflow:hidden;
+}
+
+.visual-grid{
+    position:absolute;
+    inset:0;
+
+    background:
+        linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+
+    background-size:60px 60px;
+
+    mask-image:
+        radial-gradient(
+            circle at center,
+            black 0%,
+            transparent 82%
+        );
+}
+
+.corner{
+    position:absolute;
+
+    font-family:"Space Mono",monospace;
+    font-size:8px;
+
+    color:#4c5360;
+}
+
+.corner.tl{
+    top:25px;
+    left:25px;
+}
+
+.corner.br{
+    right:25px;
+    bottom:25px;
+}
+
+
+/* =====================================================
+   GRAPH SVG
+===================================================== */
+
+svg{
+    position:absolute;
+
+    width:100%;
+    height:100%;
+
+    inset:0;
+}
+
+.axis{
+    stroke:#343a45;
+    stroke-width:1;
+}
+
+.axis-text{
+    fill:#4e5561;
+
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+}
+
+.line{
+    stroke:#606875;
+    stroke-width:1.5;
+
+    stroke-dasharray:7 8;
+
+    opacity:0;
+
+    transition:
+        opacity .5s,
+        stroke .5s,
+        stroke-width .5s;
+}
+
+.line.show{
+    opacity:1;
+}
+
+.line.selected{
+    stroke:var(--blue);
+    stroke-width:2.5;
+}
+
+.dist{
+    fill:#89919e;
+
+    font-family:"Space Mono",monospace;
+    font-size:11px;
+
+    opacity:0;
+
+    transition:.4s;
+}
+
+.dist.show{
+    opacity:1;
+}
+
+
+/* =====================================================
+   DATA POINTS
+===================================================== */
+
+.dot{
+    stroke:#080a0e;
+    stroke-width:5;
+
+    transition:
+        transform .6s,
+        opacity .5s;
+}
+
+.normal-dot{
+    fill:var(--blue);
+    filter:
+        drop-shadow(0 0 10px rgba(124,156,255,.7));
+}
+
+.risk-dot{
+    fill:var(--red);
+    filter:
+        drop-shadow(0 0 10px rgba(255,114,121,.65));
+}
+
+.q-dot{
+    fill:var(--gold);
+    filter:
+        drop-shadow(0 0 18px rgba(255,214,107,.8));
+}
+
+.name{
+    fill:#e8ebef;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:12px;
+    font-weight:700;
+}
+
+.coord{
+    fill:#59616e;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+}
+
+
+/* =====================================================
+   Q RINGS
+===================================================== */
+
+.q-ring{
+    fill:none;
+
+    stroke:var(--gold);
+    stroke-width:1;
+
+    opacity:.4;
+
+    transform-origin:200px 410px;
+
+    animation:qPulse 2.5s infinite;
+}
+
+.q-ring.r2{
+    animation-delay:.8s;
+}
+
+.q-ring.r3{
+    animation-delay:1.6s;
+}
+
+@keyframes qPulse{
+
+    0%{
+        transform:scale(.5);
+        opacity:.55;
+    }
+
+    75%{
+        transform:scale(2.5);
+        opacity:0;
+    }
+
+    100%{
+        opacity:0;
+    }
+
+}
+
+
+/* =====================================================
+   K RADIUS
+===================================================== */
+
+.radius{
+    fill:rgba(124,156,255,.045);
+
+    stroke:var(--blue);
+    stroke-width:1.5;
+
+    stroke-dasharray:8 8;
+
+    opacity:0;
+
+    transition:.8s;
+}
+
+.radius.show{
+    opacity:1;
+}
+
+
+/* =====================================================
+   TIE
+===================================================== */
+
+.tie{
+    position:absolute;
+
+    right:8%;
+    top:17%;
+
+    padding:10px 15px;
+
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:100px;
+
+    background:rgba(12,14,19,.75);
+
+    backdrop-filter:blur(14px);
+
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+
+    color:#69717e;
+
+    opacity:0;
+
+    transform:translateY(10px);
+
+    transition:.5s;
+}
+
+.tie.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+.tie strong{
+    color:#e7e9ed;
+}
+
+
+/* =====================================================
+   SIDE PANEL
+===================================================== */
+
+.panel{
+    border-left:1px solid var(--border);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.035),
+            rgba(255,255,255,.012)
+        );
+
+    padding:32px;
+
+    display:flex;
+    flex-direction:column;
+}
+
+.panel-head{
+    display:flex;
+    justify-content:space-between;
+
+    color:#5e6673;
+
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+}
+
+.panel h3{
+    margin-top:38px;
+
+    font-size:38px;
+
+    line-height:.92;
+
+    letter-spacing:-.065em;
+}
+
+.panel-description{
+    margin-top:18px;
+
+    color:#7e8693;
+
+    font-size:13px;
+    line-height:1.75;
+}
+
+
+/* =====================================================
+   DISTANCE LIST
+===================================================== */
+
+.distance-list{
+    margin-top:32px;
+
+    border-top:1px solid var(--border);
+}
+
+.d-row{
+    display:grid;
+    grid-template-columns:30px 1fr auto;
+
+    padding:15px 0;
+
+    border-bottom:1px solid rgba(255,255,255,.055);
+
+    color:#666e7c;
+
+    font-family:"Space Mono",monospace;
+    font-size:10px;
+
+    transition:.3s;
+}
+
+.d-row.active{
+    color:#e9ebef;
+}
+
+.d-row.active .value{
+    color:var(--blue);
+}
+
+.d-row.risk .value{
+    color:var(--red);
+}
+
+
+/* =====================================================
+   K
+===================================================== */
+
+.k-box{
+    margin-top:auto;
+
+    padding-top:30px;
+}
+
+.k-label{
+    color:#5e6672;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+
+    margin-bottom:10px;
+}
+
+.k-top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+}
+
+.k-number{
+    font-size:70px;
+    font-weight:700;
+
+    line-height:.75;
+
+    letter-spacing:-.1em;
+}
+
+.k-name{
+    color:#606875;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+
+    line-height:1.5;
+}
+
+input[type=range]{
+    width:100%;
+
+    margin-top:25px;
+
+    accent-color:var(--blue);
+}
+
+.main-btn{
+    width:100%;
+
+    margin-top:20px;
+
+    padding:17px;
+
+    border:0;
+
+    border-radius:12px;
+
+    background:#f1f3f7;
+
+    color:#0a0c10;
+
+    font-size:12px;
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.main-btn:hover{
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 15px 35px rgba(255,255,255,.08);
+}
+
+.reset-btn{
+    width:100%;
+
+    margin-top:8px;
+
+    padding:12px;
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    background:transparent;
+
+    color:#626a77;
+
+    font-size:10px;
+
+    cursor:pointer;
+}
+
+
+/* =====================================================
+   EXPLANATION
+===================================================== */
+
+.explain{
+    padding:0 7vw 130px;
+
+    display:grid;
+
+    grid-template-columns:.8fr 1.2fr;
+
+    gap:10vw;
+}
+
+.explain-title{
+    font-size:clamp(45px,6vw,80px);
+
+    line-height:.85;
+
+    letter-spacing:-.075em;
+}
+
+.explain-copy{
+    max-width:650px;
+}
+
+.formula-box{
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+
+    padding:30px 0;
+
+    font-family:"Space Mono",monospace;
+}
+
+.formula-label{
+    color:#555d69;
+    font-size:9px;
+
+    margin-bottom:15px;
+}
+
+.formula{
+    font-size:21px;
+}
+
+.formula span{
+    color:var(--blue);
+}
+
+.explain-copy p{
+    margin-top:28px;
+
+    color:#7d8592;
+
+    font-size:15px;
+    line-height:1.9;
+}
+
+
+/* =====================================================
+   FINAL
+===================================================== */
+
+.final{
+    min-height:80vh;
+
+    padding:130px 7vw;
+
+    border-top:1px solid var(--border);
+
+    display:flex;
+    align-items:center;
+
+    background:
+        radial-gradient(
+            circle at 70% 50%,
+            rgba(88,121,230,.12),
+            transparent 35%
+        );
+}
+
+.final-grid{
+    width:100%;
+
+    display:grid;
+    grid-template-columns:1.2fr .8fr;
+
+    gap:10vw;
+
+    align-items:center;
+}
+
+.final-kicker{
+    color:#5e6672;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:9px;
+    letter-spacing:.16em;
+
+    margin-bottom:30px;
+}
+
+.final h2{
+    font-size:clamp(70px,12vw,180px);
+
+    line-height:.75;
+
+    letter-spacing:-.1em;
+}
+
+.final h2 span{
+    color:var(--blue);
+
+    text-shadow:
+        0 0 70px rgba(124,156,255,.25);
+}
+
+.final-text{
+    color:#818996;
+
+    font-size:16px;
+    line-height:1.9;
+}
+
+.vote-proof{
+    margin-top:35px;
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.vote{
+    width:85px;
+    height:85px;
+
+    border:1px solid var(--border);
+    border-radius:20px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    background:rgba(255,255,255,.025);
+}
+
+.vote strong{
+    font-size:32px;
+}
+
+.vote small{
+    font-family:"Space Mono",monospace;
+    font-size:8px;
+
+    margin-top:5px;
+    color:#646c79;
+}
+
+.vote.blue strong{
+    color:var(--blue);
+}
+
+.vote.red strong{
+    color:var(--red);
+}
+
+.vs{
+    font-family:"Space Mono",monospace;
+    font-size:9px;
+    color:#4c5460;
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+footer{
+    border-top:1px solid var(--border);
+
+    padding:25px 7vw;
+
+    display:flex;
+    justify-content:space-between;
+
+    color:#414853;
+
+    font-family:"Space Mono",monospace;
+
+    font-size:8px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:950px){
+
+    .lab{
+        grid-template-columns:1fr;
+    }
+
+    .panel{
+        border-left:0;
+        border-top:1px solid var(--border);
+    }
+
+    .visual{
+        min-height:600px;
+    }
+
+    .final-grid{
+        grid-template-columns:1fr;
+    }
+
+    .explain{
+        grid-template-columns:1fr;
+        gap:50px;
+    }
+}
+
+@media(max-width:650px){
+
+    .nav{
+        padding:0 20px;
+    }
+
+    .nav-right{
+        display:none;
+    }
+
+    .hero{
+        padding:80px 25px;
+    }
+
+    .hero h1{
+        font-size:65px;
+    }
+
+    .hero-sub{
+        margin-top:40px;
+    }
+
+    .concept-strip{
+        grid-template-columns:1fr;
+    }
+
+    .concept-item{
+        border-right:0;
+        border-bottom:1px solid var(--border);
+    }
+
+    .lab-intro{
+        padding-left:25px;
+        padding-right:25px;
+
+        display:block;
+    }
+
+    .lab-desc{
+        margin-top:30px;
+    }
+
+    .lab{
+        margin-left:10px;
+        margin-right:10px;
+
+        border-radius:20px;
+    }
+
+    .visual{
+        min-height:500px;
+    }
+
+    .panel{
+        padding:25px;
+    }
+
+    .final{
+        padding-left:25px;
+        padding-right:25px;
+    }
+
+    .final h2{
+        font-size:78px;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="noise"></div>
+
+
+<!-- =====================================================
+     NAV
+===================================================== -->
+
+<nav class="nav">
+
+    <div class="nav-left">
+
+        <div class="logo">
+            K
+        </div>
+
+        K-NEAREST NEIGHBORS
+
+    </div>
+
+
+    <div class="nav-right">
+
+        <span>INTERACTIVE</span>
+        <span>EUCLIDEAN DISTANCE</span>
+        <span>2026</span>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="hero">
+
+    <div class="hero-number">
+        01 / 05
+    </div>
+
+    <div class="hero-kicker">
+        MACHINE LEARNING — CLASSIFICATION
+    </div>
+
+    <h1>
+
+        WHO IS<br>
+        <em>NEAREST?</em>
+
+    </h1>
+
+
+    <p class="hero-sub">
+
+        KNN จำแนกข้อมูลใหม่โดยดูจาก
+        <b>เพื่อนบ้านที่อยู่ใกล้ที่สุด</b>
+        แล้วใช้เสียงส่วนใหญ่เป็นคำตอบ
+
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     CONCEPT
+===================================================== -->
+
+<section class="concept-strip">
+
+    <div class="concept-item">
+
+        <div class="concept-num">
+            01 / MEASURE
+        </div>
+
+        <h3>
+            วัดระยะ
+        </h3>
+
+        <p>
+            หาว่า Q อยู่ห่างจากข้อมูลเดิมเท่าไร
+        </p>
+
+    </div>
+
+
+    <div class="concept-item">
+
+        <div class="concept-num">
+            02 / SELECT
+        </div>
+
+        <h3>
+            เลือก K
+        </h3>
+
+        <p>
+            เลือกเพื่อนบ้านที่ใกล้ที่สุด K จุด
+        </p>
+
+    </div>
+
+
+    <div class="concept-item">
+
+        <div class="concept-num">
+            03 / VOTE
+        </div>
+
+        <h3>
+            โหวต
+        </h3>
+
+        <p>
+            คลาสที่มีเสียงมากที่สุดคือคำตอบ
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     LAB INTRO
+===================================================== -->
+
+<section class="lab-intro">
+
+    <div>
+
+        <div class="hero-kicker">
+            INTERACTIVE LAB
+        </div>
+
+        <h2>
+            WATCH KNN<br>
+            <span>THINK.</span>
+        </h2>
+
+    </div>
+
+
+    <p class="lab-desc">
+
+        กดปุ่มเพื่อดูการตัดสินใจของ KNN
+        ทีละขั้น ตั้งแต่การวัดระยะ
+        ไปจนถึงผลลัพธ์สุดท้าย
+
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     LAB
+===================================================== -->
+
+<section class="lab">
+
+
+    <!-- VISUAL -->
+
+    <div class="visual">
+
+        <div class="visual-grid"></div>
+
+        <div class="corner tl">
+            X₁ / X₂ SPACE
+        </div>
+
+        <div class="corner br">
+            Q = NEW DATA
+        </div>
+
+
+        <svg viewBox="0 0 800 650"
+             preserveAspectRatio="none">
+
+
+            <!-- AXIS -->
+
+            <line
+                class="axis"
+                x1="60"
+                y1="590"
+                x2="750"
+                y2="590"
+            />
+
+            <line
+                class="axis"
+                x1="60"
+                y1="50"
+                x2="60"
+                y2="590"
+            />
+
+            <text
+                class="axis-text"
+                x="735"
+                y="610"
+            >
+                X₁
+            </text>
+
+            <text
+                class="axis-text"
+                x="40"
+                y="65"
+            >
+                X₂
+            </text>
+
+
+            <!-- DISTANCE LINES -->
+
+            <line
+                id="lineA"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="160"
+                y2="410"
+            />
+
+            <line
+                id="lineB"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="260"
+                y2="335"
+            />
+
+            <line
+                id="lineC"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="560"
+                y2="110"
+            />
+
+            <line
+                id="lineD"
+                class="line"
+                x1="260"
+                y1="410"
+                x2="635"
+                y2="185"
+            />
+
+
+            <!-- DISTANCE TEXT -->
+
+            <text
+                id="distA"
+                class="dist"
+                x="195"
+                y="395"
+            >
+                1.00
+            </text>
+
+            <text
+                id="distB"
+                class="dist"
+                x="275"
+                y="375"
+            >
+                1.00
+            </text>
+
+            <text
+                id="distC"
+                class="dist"
+                x="385"
+                y="245"
+            >
+                5.00
+            </text>
+
+            <text
+                id="distD"
+                class="dist"
+                x="450"
+                y="310"
+            >
+                5.00
+            </text>
+
+
+            <!-- RADIUS -->
+
+            <circle
+                id="radius"
+                class="radius"
+                cx="260"
+                cy="410"
+                r="0"
+            />
+
+
+            <!-- QUERY RINGS -->
+
+            <circle
+                class="q-ring"
+                cx="260"
+                cy="410"
+                r="22"
+            />
+
+            <circle
+                class="q-ring r2"
+                cx="260"
+                cy="410"
+                r="22"
+            />
+
+            <circle
+                class="q-ring r3"
+                cx="260"
+                cy="410"
+                r="22"
+            />
+
+
+            <!-- A -->
+
+            <circle
+                class="dot normal-dot"
+                cx="160"
+                cy="410"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="160"
+                y="380"
+                text-anchor="middle"
+            >
+                A
+            </text>
+
+            <text
+                class="coord"
+                x="160"
+                y="435"
+                text-anchor="middle"
+            >
+                (1,2)
+            </text>
+
+
+            <!-- B -->
+
+            <circle
+                class="dot normal-dot"
+                cx="260"
+                cy="335"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="260"
+                y="305"
+                text-anchor="middle"
+            >
+                B
+            </text>
+
+            <text
+                class="coord"
+                x="260"
+                y="360"
+                text-anchor="middle"
+            >
+                (2,3)
+            </text>
+
+
+            <!-- C -->
+
+            <circle
+                class="dot risk-dot"
+                cx="560"
+                cy="110"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="560"
+                y="80"
+                text-anchor="middle"
+            >
+                C
+            </text>
+
+            <text
+                class="coord"
+                x="560"
+                y="135"
+                text-anchor="middle"
+            >
+                (5,6)
+            </text>
+
+
+            <!-- D -->
+
+            <circle
+                class="dot risk-dot"
+                cx="635"
+                cy="185"
+                r="12"
+            />
+
+            <text
+                class="name"
+                x="635"
+                y="155"
+                text-anchor="middle"
+            >
+                D
+            </text>
+
+            <text
+                class="coord"
+                x="635"
+                y="210"
+                text-anchor="middle"
+            >
+                (6,5)
+            </text>
+
+
+            <!-- Q -->
+
+            <circle
+                class="dot q-dot"
+                cx="260"
+                cy="410"
+                r="15"
+            />
+
+            <text
+                class="name"
+                x="260"
+                y="450"
+                text-anchor="middle"
+            >
+                Q = (2,2)
+            </text>
+
+
+        </svg>
+
+
+        <div
+            class="tie"
+            id="tie"
+        >
+            C + D&nbsp;&nbsp; / &nbsp;&nbsp;
+            <strong>SAME DISTANCE · 5.00</strong>
+        </div>
+
+    </div>
+
+
+
+    <!-- PANEL -->
+
+    <aside class="panel">
+
+
+        <div class="panel-head">
+
+            <span id="panelStep">
+                STEP 01
+            </span>
+
+            <span>
+                KNN
+            </span>
+
+        </div>
+
+
+        <h3 id="panelTitle">
+
+            Start<br>
+            with data.
+
+        </h3>
+
+
+        <p
+            class="panel-description"
+            id="panelDescription"
+        >
+
+            Q คือข้อมูลใหม่
+            ที่เรายังไม่รู้ว่าเป็นกลุ่มไหน
+            ส่วน A–D คือข้อมูลที่มี class อยู่แล้ว
+
+        </p>
+
+
+        <div class="distance-list">
+
+
+            <div
+                class="d-row"
+                id="rowA"
+            >
+                <span>A</span>
+                <span>NORMAL</span>
+                <span class="value">1.00</span>
+            </div>
+
+
+            <div
+                class="d-row"
+                id="rowB"
+            >
+                <span>B</span>
+                <span>NORMAL</span>
+                <span class="value">1.00</span>
+            </div>
+
+
+            <div
+                class="d-row risk"
+                id="rowC"
+            >
+                <span>C</span>
+                <span>HIGH RISK</span>
+                <span class="value">5.00</span>
+            </div>
+
+
+            <div
+                class="d-row risk"
+                id="rowD"
+            >
+                <span>D</span>
+                <span>HIGH RISK</span>
+                <span class="value">5.00</span>
+            </div>
+
+
+        </div>
+
+
+        <div class="k-box">
+
+
+            <div class="k-label">
+                NUMBER OF NEIGHBORS
+            </div>
+
+
+            <div class="k-top">
+
+                <div
+                    class="k-number"
+                    id="kNumber"
+                >
+                    3
+                </div>
+
+                <div class="k-name">
+                    K<br>
+                    NEAREST
+                </div>
+
+            </div>
+
+
+            <input
+                id="kSlider"
+                type="range"
+                min="1"
+                max="4"
+                value="3"
+            >
+
+
+            <button
+                class="main-btn"
+                id="nextBtn"
+            >
+                START →
+            </button>
+
+
+            <button
+                class="reset-btn"
+                id="resetBtn"
+            >
+                RESET
+            </button>
+
+        </div>
+
+    </aside>
+
+</section>
+
+
+
+<!-- =====================================================
+     EXPLANATION
+===================================================== -->
+
+<section class="explain">
+
+    <div>
+
+        <div class="hero-kicker">
+            THE MATH
+        </div>
+
+        <div class="explain-title">
+            Simple<br>
+            geometry.
+        </div>
+
+    </div>
+
+
+    <div class="explain-copy">
+
+        <div class="formula-box">
+
+            <div class="formula-label">
+                EUCLIDEAN DISTANCE
+            </div>
+
+            <div class="formula">
+
+                d(P,Q) =
+                <span>
+                    √[(p₁−q₁)² + (p₂−q₂)²]
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <p>
+
+            สำหรับ Q = (2,2)
+            เราคำนวณระยะทางไปยังข้อมูลทุกจุด
+
+            <br><br>
+
+            A = 1.00 &nbsp;·&nbsp;
+            B = 1.00 &nbsp;·&nbsp;
+            C = 5.00 &nbsp;·&nbsp;
+            D = 5.00
+
+            <br><br>
+
+            ยิ่งตัวเลขน้อย
+            แปลว่ายิ่งอยู่ใกล้ Q
+
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FINAL
+===================================================== -->
+
+<section class="final">
+
+    <div class="final-grid">
+
+
+        <div>
+
+            <div class="final-kicker">
+                FINAL PREDICTION / K = 3
+            </div>
+
+            <h2>
+                <span>NORMAL</span>
+            </h2>
+
+        </div>
+
+
+        <div>
+
+            <p class="final-text">
+
+                เพื่อนบ้านที่ใช้ตัดสินใจ
+                ให้เสียงส่วนใหญ่เป็น “ปกติ”
+
+            </p>
+
+
+            <div class="vote-proof">
+
+                <div class="vote blue">
+
+                    <strong>2</strong>
+
+                    <small>
+                        NORMAL
+                    </small>
+
+                </div>
+
+
+                <div class="vs">
+                    VS
+                </div>
+
+
+                <div class="vote red">
+
+                    <strong>1</strong>
+
+                    <small>
+                        HIGH RISK
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <p
+                class="final-text"
+                style="margin-top:25px;font-size:13px;"
+            >
+
+                ดังนั้น
+
+                <strong style="color:#fff;">
+                    Q = (2,2)
+                </strong>
+
+                ถูกจัดอยู่ในกลุ่ม
+
+                <strong style="color:var(--blue);">
+                    NORMAL
+                </strong>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<footer>
+
+    <span>
+        KNN / NEAREST NEIGHBORS
+    </span>
+
+    <span>
+        INTERACTIVE DATA VISUALIZATION
+    </span>
+
+</footer>
+
+
+
+<script>
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let step = 1;
+let K = 3;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const nextBtn =
+    document.getElementById("nextBtn");
+
+const resetBtn =
+    document.getElementById("resetBtn");
+
+const slider =
+    document.getElementById("kSlider");
+
+const kNumber =
+    document.getElementById("kNumber");
+
+const panelStep =
+    document.getElementById("panelStep");
+
+const panelTitle =
+    document.getElementById("panelTitle");
+
+const panelDescription =
+    document.getElementById("panelDescription");
+
+const tie =
+    document.getElementById("tie");
+
+const radius =
+    document.getElementById("radius");
+
+
+const lines = {
+
+    A:document.getElementById("lineA"),
+    B:document.getElementById("lineB"),
+    C:document.getElementById("lineC"),
+    D:document.getElementById("lineD")
+
+};
+
+
+const labels = {
+
+    A:document.getElementById("distA"),
+    B:document.getElementById("distB"),
+    C:document.getElementById("distC"),
+    D:document.getElementById("distD")
+
+};
+
+
+const rows = {
+
+    A:document.getElementById("rowA"),
+    B:document.getElementById("rowB"),
+    C:document.getElementById("rowC"),
+    D:document.getElementById("rowD")
+
+};
+
+
+
+/* =====================================================
+   K SLIDER
+===================================================== */
+
+slider.addEventListener("input",()=>{
+
+    K = Number(slider.value);
+
+    kNumber.textContent = K;
+
+    if(step === 3){
+
+        updateStep();
+
+    }
+
+});
+
+
+
+/* =====================================================
+   RESET VISUAL
+===================================================== */
+
+function clearVisual(){
+
+    Object.values(lines).forEach(el=>{
+
+        el.classList.remove("show");
+        el.classList.remove("selected");
+
+    });
+
+
+    Object.values(labels).forEach(el=>{
+
+        el.classList.remove("show");
+
+    });
+
+
+    Object.values(rows).forEach(el=>{
+
+        el.classList.remove("active");
+
+    });
+
+
+    radius.classList.remove("show");
+
+    radius.setAttribute("r","0");
+
+    tie.classList.remove("show");
+
+}
+
+
+
+/* =====================================================
+   STEP UPDATE
+===================================================== */
+
+function updateStep(){
+
+    clearVisual();
+
+
+    panelStep.textContent =
+        `STEP ${String(step).padStart(2,"0")}`;
+
+
+
+    /* -----------------------------------------------
+       STEP 1
+    ----------------------------------------------- */
+
+    if(step === 1){
+
+        panelTitle.innerHTML =
+            "Start<br>with data.";
+
+        panelDescription.innerHTML =
+            "Q คือข้อมูลใหม่ " +
+            "ที่เรายังไม่รู้ว่าเป็นกลุ่มไหน " +
+            "ส่วน A–D คือข้อมูลที่มี class อยู่แล้ว";
+
+        nextBtn.textContent =
+            "MEASURE DISTANCE →";
+
+    }
+
+
+
+    /* -----------------------------------------------
+       STEP 2
+    ----------------------------------------------- */
+
+    if(step === 2){
+
+        panelTitle.innerHTML =
+            "Measure<br>distance.";
+
+        panelDescription.innerHTML =
+            "เราวัดระยะจาก Q " +
+            "ไปยังทุกจุด " +
+            "เพื่อดูว่าใครอยู่ใกล้ที่สุด";
+
+        nextBtn.textContent =
+            "FIND NEIGHBORS →";
+
+
+        ["A","B","C","D"].forEach((key,index)=>{
+
+            setTimeout(()=>{
+
+                lines[key].classList.add("show");
+
+                labels[key].classList.add("show");
+
+                rows[key].classList.add("active");
+
+            },index*180);
+
+        });
+
+    }
+
+
+
+    /* -----------------------------------------------
+       STEP 3
+    ----------------------------------------------- */
+
+    if(step === 3){
+
+        panelTitle.innerHTML =
+            "Choose<br>K = " + K + ".";
+
+        panelDescription.innerHTML =
+            "เลือกเพื่อนบ้านที่ใกล้ที่สุด " +
+            K + " จุด";
+
+        nextBtn.textContent =
+            "COUNT THE VOTES →";
+
+
+        Object.values(lines).forEach(el=>{
+            el.classList.add("show");
+        });
+
+        Object.values(labels).forEach(el=>{
+            el.classList.add("show");
+        });
+
+
+        rows.A.classList.add("active");
+        rows.B.classList.add("active");
+
+
+        if(K >= 3){
+
+            rows.C.classList.add("active");
+
+            lines.C.classList.add("selected");
+
+        }
+
+
+        if(K >= 4){
+
+            rows.D.classList.add("active");
+
+            lines.D.classList.add("selected");
+
+        }
+
+
+        if(K === 3){
+
+            radius.setAttribute("r","255");
+
+            radius.classList.add("show");
+
+            tie.classList.add("show");
+
+        }
+
+    }
+
+
+
+    /* -----------------------------------------------
+       STEP 4
+    ----------------------------------------------- */
+
+    if(step === 4){
+
+        panelTitle.innerHTML =
+            "Count<br>the votes.";
+
+        panelDescription.innerHTML =
+            "A และ B เป็น NORMAL " +
+            "จึงได้ 2 เสียง " +
+            "ส่วน C หรือ D ได้ 1 เสียง";
+
+        nextBtn.textContent =
+            "REVEAL RESULT →";
+
+
+        rows.A.classList.add("active");
+        rows.B.classList.add("active");
+
+        if(K >= 3){
+            rows.C.classList.add("active");
+        }
+
+        if(K >= 4){
+            rows.D.classList.add("active");
+        }
+
+    }
+
+
+
+    /* -----------------------------------------------
+       STEP 5
+    ----------------------------------------------- */
+
+    if(step === 5){
+
+        panelTitle.innerHTML =
+            "Decision<br>made.";
+
+        panelDescription.innerHTML =
+            "เสียงส่วนใหญ่เป็น NORMAL " +
+            "ดังนั้น Q = (2,2) " +
+            "จึงถูกจัดเป็น NORMAL";
+
+        nextBtn.textContent =
+            "RESTART ↻";
+
+    }
+
+}
+
+
+
+/* =====================================================
+   NEXT
+===================================================== */
+
+nextBtn.addEventListener("click",()=>{
+
+    if(step < 5){
+
+        step++;
+
+    }else{
+
+        step = 1;
+
+    }
+
+    updateStep();
+
+});
+
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+resetBtn.addEventListener("click",()=>{
+
+    step = 1;
+
+    K = 3;
+
+    slider.value = 3;
+
+    kNumber.textContent = 3;
+
+    updateStep();
+
+});
+
+
+
+/* =====================================================
+   SPACE
+===================================================== */
+
+document.addEventListener("keydown",(e)=>{
+
+    if(e.code === "Space"){
+
+        e.preventDefault();
+
+        nextBtn.click();
+
+    }
+
+});
+
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+updateStep();
+
+</script>
+
+</body>
+</html>
+```

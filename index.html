@@ -3,628 +3,1440 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>KNN Clinic | Interactive Visualization</title>
+<title>KNN Visual Lab</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #070b16;
+    --card: rgba(15, 23, 42, .82);
+    --card2: #101a2d;
+    --border: rgba(148,163,184,.16);
+
+    --blue: #55a8ff;
+    --blue2: #2677d4;
+
+    --red: #ff637d;
+    --red2: #c93654;
+
+    --yellow: #ffd65a;
+    --green: #46e0a0;
+    --purple: #9b7cff;
+
+    --text: #f4f7ff;
+    --muted: #8fa1bc;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 10% 0%, #193d72 0, transparent 30%),
+        radial-gradient(circle at 90% 5%, #41205f 0, transparent 28%),
+        var(--bg);
+    color: var(--text);
+    font-family: "Prompt", sans-serif;
+    overflow-x: hidden;
+}
+
+/* =========================
+   BACKGROUND
+========================= */
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+    background-size: 45px 45px;
+    mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+/* =========================
+   APP
+========================= */
+
+.app {
+    width: min(1450px, 94%);
+    margin: auto;
+    padding: 35px 0 60px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+
+    display: grid;
+    place-items: center;
+
+    font-size: 28px;
+
+    background:
+        linear-gradient(135deg, #438cff, #8b63ff);
+
+    box-shadow:
+        0 0 25px rgba(85,168,255,.35),
+        0 0 60px rgba(139,99,255,.15);
+}
+
+.kicker {
+    color: var(--blue);
+    font-size: 11px;
+    letter-spacing: 3px;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: clamp(28px, 4vw, 46px);
+    line-height: 1.1;
+    margin: 4px 0;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.status {
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,.7);
+    padding: 10px 15px;
+    border-radius: 14px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.status span {
+    color: var(--green);
+    font-weight: 700;
+}
+
+/* =========================
+   PROCESS BAR
+========================= */
+
+.process {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.process-item {
+    padding: 14px;
+    border-radius: 15px;
+    border: 1px solid var(--border);
+    background: rgba(15,23,42,.65);
+    transition: .35s;
+}
+
+.process-item.active {
+    border-color: #806cff;
+    background: rgba(55,45,110,.3);
+    box-shadow: 0 0 30px rgba(128,108,255,.12);
+}
+
+.process-number {
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.process-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 3px;
+}
+
+/* =========================
+   MAIN GRID
+========================= */
+
+.main {
+    display: grid;
+    grid-template-columns: 270px 1fr 300px;
+    gap: 16px;
+}
+
+.card {
+    border: 1px solid var(--border);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(16,26,45,.94),
+            rgba(8,16,30,.94)
+        );
+    border-radius: 22px;
+    box-shadow:
+        0 20px 70px rgba(0,0,0,.3),
+        inset 0 1px rgba(255,255,255,.025);
+    overflow: hidden;
+}
+
+.card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 19px;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-head h2 {
+    font-size: 14px;
+}
+
+.badge {
+    font-size: 9px;
+    padding: 5px 8px;
+    border-radius: 99px;
+    border: 1px solid #2c4770;
+    color: #83bfff;
+    background: #10223d;
+}
+
+.card-body {
+    padding: 18px;
+}
+
+/* =========================
+   DATA
+========================= */
+
+.patient {
+    display: grid;
+    grid-template-columns: 35px 1fr auto;
+    gap: 10px;
+    align-items: center;
+
+    padding: 11px 8px;
+    margin-bottom: 6px;
+
+    border-radius: 12px;
+    background: rgba(255,255,255,.025);
+
+    transition: .3s;
+}
+
+.patient:hover {
+    background: rgba(255,255,255,.05);
+}
+
+.patient .letter {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.letter.blue {
+    color: #9ed2ff;
+    background: #10345a;
+    border: 1px solid #266aa7;
+}
+
+.letter.red {
+    color: #ff9aab;
+    background: #4b1d2b;
+    border: 1px solid #9d304c;
+}
+
+.patient-name {
+    font-size: 12px;
+}
+
+.patient-coord {
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.tag {
+    font-size: 9px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.tag.blue {
+    color: #80c4ff;
+    background: #103354;
+}
+
+.tag.red {
+    color: #ff8fa3;
+    background: #4b1e2d;
+}
+
+.query-box {
+    margin-top: 16px;
+    padding: 15px;
+
+    border-radius: 15px;
+
+    border: 1px solid #776326;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(77,61,13,.35),
+            rgba(35,29,12,.4)
+        );
+}
+
+.query-label {
+    font-size: 10px;
+    color: #cbbd81;
+}
+
+.query-value {
+    color: var(--yellow);
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.query-desc {
+    color: #9f9365;
+    font-size: 10px;
+}
+
+/* =========================
+   CHART
+========================= */
+
+.chart-card {
+    min-height: 690px;
+}
+
+.chart-area {
+    padding: 18px;
+}
+
+.chart {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.2;
+
+    border-radius: 18px;
+
+    border: 1px solid #203858;
+
+    background:
+        linear-gradient(
+            rgba(76,113,153,.13) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(76,113,153,.13) 1px,
+            transparent 1px
+        ),
+        radial-gradient(
+            circle at 50% 50%,
+            #122644,
+            #091322 70%
+        );
+
+    background-size: 10% 10%;
+    overflow: hidden;
+}
+
+.chart::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 50% 50%,
+            rgba(84,130,255,.07),
+            transparent 35%
+        );
+
+    pointer-events: none;
+}
+
+.axis-x,
+.axis-y {
+    position: absolute;
+    color: #607797;
+    font-size: 10px;
+    font-weight: 600;
+    z-index: 20;
+}
+
+.axis-x {
+    bottom: 8px;
+    right: 15px;
+}
+
+.axis-x::after {
+    content: "X1  ระดับน้ำตาล →";
+}
+
+.axis-y {
+    top: 13px;
+    left: 12px;
+}
+
+.axis-y::after {
+    content: "X2  ความดันโลหิต ↑";
+}
+
+/* =========================
+   POINTS
+========================= */
+
+.point {
+    position: absolute;
+
+    width: 45px;
+    height: 45px;
+
+    transform:
+        translate(-50%, 50%)
+        scale(1);
+
+    border-radius: 50%;
+
+    display: grid;
+    place-items: center;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    z-index: 10;
+
+    transition:
+        transform .5s,
+        opacity .5s,
+        filter .5s,
+        box-shadow .5s;
+}
+
+.point.blue {
+    background: #12385e;
+    border: 2px solid var(--blue);
+    color: #a7d6ff;
+
+    box-shadow:
+        0 0 15px rgba(77,163,255,.25);
+}
+
+.point.red {
+    background: #4b1d2d;
+    border: 2px solid var(--red);
+    color: #ff9dae;
+
+    box-shadow:
+        0 0 15px rgba(255,99,125,.2);
+}
+
+.point.q {
+    width: 57px;
+    height: 57px;
+
+    background: #45360d;
+    border: 3px solid var(--yellow);
+    color: #fff1a5;
+
+    box-shadow:
+        0 0 22px rgba(255,214,90,.8),
+        0 0 55px rgba(255,214,90,.18);
+
+    z-index: 30;
+}
+
+.point.neighbor {
+    transform:
+        translate(-50%, 50%)
+        scale(1.25);
+
+    filter: brightness(1.25);
+}
+
+.point.dim {
+    opacity: .23;
+    filter: grayscale(.6);
+}
+
+/* =========================
+   DISTANCE LINES
+========================= */
+
+.distance-line {
+    position: absolute;
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--yellow),
+            rgba(119,143,177,.4)
+        );
+
+    transform-origin: left center;
+
+    z-index: 4;
+
+    opacity: 0;
+
+    transition: opacity .4s;
+}
+
+.distance-line.show {
+    opacity: 1;
+}
+
+.distance-label {
+    position: absolute;
+
+    padding: 3px 7px;
+
+    border-radius: 6px;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    color: #f5e6a3;
+
+    background: #29230e;
+    border: 1px solid #665724;
+
+    transform: translate(-50%, -50%);
+
+    z-index: 15;
+
+    opacity: 0;
+
+    transition: opacity .4s;
+}
+
+.distance-label.show {
+    opacity: 1;
+}
+
+/* =========================
+   RING
+========================= */
+
+.ring {
+    position: absolute;
+
+    border-radius: 50%;
+
+    border: 1px dashed rgba(255,214,90,.65);
+
+    transform: translate(-50%, 50%);
+
+    z-index: 3;
+
+    opacity: 0;
+
+    transition:
+        width .8s cubic-bezier(.2,.8,.2,1),
+        height .8s cubic-bezier(.2,.8,.2,1),
+        opacity .5s;
+}
+
+.ring.show {
+    opacity: 1;
+}
+
+/* =========================
+   CONTROLS
+========================= */
+
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    margin-top: 16px;
+}
+
+button {
+    border: 0;
+
+    padding: 11px 17px;
+
+    border-radius: 11px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4b62e9,
+            #7654d9
+        );
+
+    font-size: 12px;
+    font-weight: 600;
+
+    box-shadow:
+        0 8px 25px rgba(88,82,220,.2);
+
+    transition: .25s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 12px 30px rgba(88,82,220,.3);
+}
+
+button.secondary {
+    color: #a9b8ce;
+    background: #152238;
+    border: 1px solid #273c5b;
+    box-shadow: none;
+}
+
+/* =========================
+   STEP EXPLANATION
+========================= */
+
+.explanation {
+    margin-top: 15px;
+
+    border-radius: 15px;
+
+    padding: 15px 17px;
+
+    background: rgba(255,255,255,.025);
+
+    border: 1px solid var(--border);
+}
+
+.explanation .mini {
+    color: var(--purple);
+    font-size: 9px;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.explanation h3 {
+    font-size: 15px;
+    margin: 3px 0;
+}
+
+.explanation p {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+/* =========================
+   RIGHT PANEL
+========================= */
+
+.k-box {
+    text-align: center;
+
+    padding: 18px;
+
+    border-radius: 16px;
+
+    background:
+        radial-gradient(
+            circle at 50% 0,
+            rgba(139,99,255,.16),
+            transparent 55%
+        );
+
+    border: 1px solid #273d60;
+}
+
+.k-label {
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.k-value {
+    font-size: 46px;
+    line-height: 1.1;
+    font-weight: 700;
+
+    color: #b6a2ff;
+
+    text-shadow:
+        0 0 25px rgba(155,124,255,.45);
+}
+
+input[type=range] {
+    width: 100%;
+    margin-top: 12px;
+    accent-color: var(--purple);
+}
+
+/* =========================
+   FORMULA
+========================= */
+
+.formula {
+    padding: 13px;
+
+    margin-top: 15px;
+
+    border-radius: 13px;
+
+    background: #0a1425;
+    border: 1px solid #1f3552;
+
+    text-align: center;
+
+    font-family: Georgia, serif;
+
+    font-size: 17px;
+}
+
+.formula small {
+    display: block;
+
+    margin-top: 7px;
+
+    color: var(--muted);
+
+    font-family: "Prompt", sans-serif;
+    font-size: 9px;
+}
+
+/* =========================
+   DISTANCE LIST
+========================= */
+
+.distance-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.distance-row {
+    display: grid;
+    grid-template-columns: 30px 1fr auto;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 9px;
+
+    border-radius: 9px;
+
+    background: rgba(255,255,255,.025);
+
+    margin-bottom: 5px;
+
+    font-size: 10px;
+
+    transition: .3s;
+}
+
+.distance-row.selected {
+    border: 1px solid #5366aa;
+    background: rgba(82,105,173,.13);
+}
+
+.distance-num {
+    color: var(--yellow);
+    font-weight: 700;
+}
+
+.distance-class {
+    color: var(--muted);
+}
+
+.distance-value {
+    font-weight: 700;
+}
+
+/* =========================
+   VOTE
+========================= */
+
+.vote {
+    margin-top: 20px;
+}
+
+.vote-row {
+    margin-bottom: 12px;
+}
+
+.vote-top {
+    display: flex;
+    justify-content: space-between;
+
+    font-size: 10px;
+
+    margin-bottom: 5px;
+}
+
+.vote-bar {
+    height: 8px;
+
+    border-radius: 99px;
+
+    background: #17253b;
+
+    overflow: hidden;
+}
+
+.vote-fill {
+    height: 100%;
+
+    width: 0;
+
+    border-radius: 99px;
+
+    transition: width .8s cubic-bezier(.2,.8,.2,1);
+}
+
+.vote-fill.blue {
+    background:
+        linear-gradient(
+            90deg,
+            #2677d4,
+            #55a8ff
+        );
+}
+
+.vote-fill.red {
+    background:
+        linear-gradient(
+            90deg,
+            #c93654,
+            #ff637d
+        );
+}
+
+/* =========================
+   RESULT
+========================= */
+
+.result {
+    margin-top: 18px;
+
+    padding: 18px;
+
+    border-radius: 17px;
+
+    text-align: center;
+
+    background:
+        radial-gradient(
+            circle at 50% 0,
+            rgba(70,224,160,.12),
+            transparent 65%
+        );
+
+    border: 1px solid #265842;
+
+    opacity: .3;
+
+    transition: .5s;
+}
+
+.result.visible {
+    opacity: 1;
+    box-shadow: 0 0 35px rgba(70,224,160,.08);
+}
+
+.result-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+}
+
+.result-value {
+    color: var(--green);
+
+    font-size: 25px;
+    font-weight: 700;
+
+    margin-top: 2px;
+}
+
+.result-desc {
+    color: #7da995;
+    font-size: 9px;
+}
+
+/* =========================
+   TIE
+========================= */
+
+.tie {
+    margin-top: 12px;
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    background: #2c2610;
+
+    border: 1px solid #665623;
+
+    color: #d6c98c;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.footer {
+    margin-top: 22px;
+
+    text-align: center;
+
+    color: #536781;
+
+    font-size: 10px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1100px) {
+
+    .main {
+        grid-template-columns: 1fr 1fr;
     }
 
-    body {
-        font-family: "Segoe UI", Tahoma, sans-serif;
-        background: #f5f7fb;
-        color: #20242d;
-        line-height: 1.6;
+    .data-card {
+        grid-column: span 1;
     }
 
-    header {
-        background: linear-gradient(135deg, #263b73, #5269ad);
-        color: white;
-        padding: 45px 20px;
-        text-align: center;
+    .chart-card {
+        grid-column: span 2;
     }
 
-    header h1 {
-        font-size: 38px;
-        margin-bottom: 8px;
+}
+
+@media(max-width:760px) {
+
+    .app {
+        width: 94%;
+        padding-top: 20px;
     }
 
-    header p {
-        opacity: .9;
-        font-size: 17px;
+    .header {
+        align-items: flex-start;
     }
 
-    .container {
-        width: min(1150px, 92%);
-        margin: 35px auto;
+    .status {
+        display: none;
     }
 
-    .intro {
-        background: white;
-        border-radius: 20px;
-        padding: 28px;
-        margin-bottom: 25px;
-        box-shadow: 0 8px 30px rgba(0,0,0,.06);
+    .process {
+        grid-template-columns: 1fr;
     }
 
-    .intro h2 {
-        color: #314b91;
-        margin-bottom: 12px;
+    .main {
+        grid-template-columns: 1fr;
     }
 
-    .intro strong {
-        color: #263b73;
+    .chart-card,
+    .data-card {
+        grid-column: span 1;
     }
 
-    .steps {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 12px;
-        margin-bottom: 30px;
+    .chart {
+        aspect-ratio: 1;
     }
-
-    .step {
-        background: white;
-        border-radius: 16px;
-        padding: 18px 12px;
-        text-align: center;
-        border: 2px solid transparent;
-        transition: .25s;
-    }
-
-    .step.active {
-        border-color: #5269ad;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(82,105,173,.15);
-    }
-
-    .step-number {
-        width: 34px;
-        height: 34px;
-        background: #e8ecfa;
-        color: #314b91;
-        border-radius: 50%;
-        margin: auto auto 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-    }
-
-    .main-grid {
-        display: grid;
-        grid-template-columns: 1.25fr .75fr;
-        gap: 25px;
-    }
-
-    .card {
-        background: white;
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 8px 30px rgba(0,0,0,.06);
-    }
-
-    .card h2 {
-        margin-bottom: 18px;
-        color: #263b73;
-    }
-
-    .chart-wrapper {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        max-width: 650px;
-        margin: auto;
-        background:
-            linear-gradient(#e9ecf3 1px, transparent 1px),
-            linear-gradient(90deg, #e9ecf3 1px, transparent 1px);
-        background-size: 10% 10%;
-        border-left: 3px solid #555;
-        border-bottom: 3px solid #555;
-        overflow: hidden;
-    }
-
-    .axis-x {
-        position: absolute;
-        bottom: -31px;
-        width: 100%;
-        text-align: center;
-        font-weight: 600;
-        color: #555;
-    }
-
-    .axis-y {
-        position: absolute;
-        left: -78px;
-        top: 50%;
-        transform: rotate(-90deg);
-        font-weight: 600;
-        color: #555;
-        white-space: nowrap;
-    }
-
-    .point {
-        position: absolute;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        transform: translate(-50%, 50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 14px;
-        transition: .5s;
-        z-index: 5;
-    }
-
-    .normal {
-        background: #dceaff;
-        border: 3px solid #4778c8;
-        color: #24539d;
-    }
-
-    .risk {
-        background: #ffe1e1;
-        border: 3px solid #dc5a5a;
-        color: #a52e2e;
-    }
-
-    .query {
-        background: #fff1bd;
-        border: 4px solid #d49b00;
-        color: #8a6500;
-        width: 52px;
-        height: 52px;
-        z-index: 10;
-    }
-
-    .neighbor {
-        box-shadow: 0 0 0 7px rgba(82,105,173,.18);
-    }
-
-    .line {
-        position: absolute;
-        height: 3px;
-        background: #8995b5;
-        transform-origin: left center;
-        z-index: 2;
-        opacity: 0;
-        transition: .5s;
-    }
-
-    .line.show {
-        opacity: 1;
-    }
-
-    .controls {
-        margin-top: 35px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    button {
-        border: none;
-        background: #314b91;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        transition: .2s;
-    }
-
-    button:hover {
-        background: #263b73;
-        transform: translateY(-2px);
-    }
-
-    button.secondary {
-        background: #e8ecf5;
-        color: #314b91;
-    }
-
-    .k-control {
-        margin: 20px 0;
-        padding: 18px;
-        background: #f6f7fb;
-        border-radius: 14px;
-    }
-
-    .k-control label {
-        font-weight: bold;
-    }
-
-    input[type="range"] {
-        width: 100%;
-        margin-top: 12px;
-    }
-
-    .k-value {
-        color: #314b91;
-        font-size: 25px;
-        font-weight: bold;
-    }
-
-    .formula {
-        background: #f1f3f9;
-        border-radius: 12px;
-        padding: 16px;
-        margin: 15px 0;
-        font-family: "Cambria Math", serif;
-        text-align: center;
-        font-size: 18px;
-    }
-
-    .distance-list {
-        margin-top: 15px;
-    }
-
-    .patient-row {
-        display: grid;
-        grid-template-columns: 45px 1fr 80px;
-        align-items: center;
-        gap: 8px;
-        padding: 11px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        background: #f6f7fa;
-    }
-
-    .patient-row.selected {
-        background: #e9edfb;
-        border: 2px solid #5269ad;
-    }
-
-    .badge {
-        padding: 4px 8px;
-        border-radius: 8px;
-        font-size: 12px;
-        text-align: center;
-        font-weight: bold;
-    }
-
-    .badge.normal {
-        background: #dceaff;
-        border: none;
-    }
-
-    .badge.risk {
-        background: #ffe1e1;
-        border: none;
-    }
-
-    .result {
-        margin-top: 20px;
-        padding: 22px;
-        border-radius: 15px;
-        background: #edf8f1;
-        border: 2px solid #6fba89;
-        text-align: center;
-    }
-
-    .result h3 {
-        color: #267041;
-        margin-bottom: 6px;
-    }
-
-    .result .big {
-        font-size: 28px;
-        font-weight: bold;
-        color: #267041;
-    }
-
-    .explain {
-        margin-top: 25px;
-        padding: 22px;
-        background: #fff;
-        border-left: 5px solid #5269ad;
-        border-radius: 12px;
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 11px;
-        border-bottom: 1px solid #eee;
-        text-align: center;
-    }
-
-    .data-table th {
-        background: #f1f3f9;
-    }
-
-    footer {
-        text-align: center;
-        padding: 35px 15px;
-        color: #777;
-    }
-
-    @media(max-width: 850px) {
-        .main-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .steps {
-            grid-template-columns: 1fr;
-        }
-
-        header h1 {
-            font-size: 30px;
-        }
-    }
+}
 </style>
 </head>
 
 <body>
 
-<header>
-    <h1>🩺 KNN Clinic</h1>
-    <p>เรียนรู้ K-Nearest Neighbors ผ่านการวินิจฉัยผู้ป่วยรายใหม่</p>
-</header>
+<div class="app">
 
-<div class="container">
+    <!-- HEADER -->
+    <header class="header">
 
-    <section class="intro">
-        <h2>K-Nearest Neighbors (KNN Classification)</h2>
+        <div class="brand">
 
-        <p>
-            KNN เป็นอัลกอริทึมประเภท
-            <strong>Supervised Learning</strong>
-            และเป็น
-            <strong>Instance-based Learning</strong>
-            หรือ
-            <strong>Lazy Learner</strong>
-        </p>
+            <div class="logo">
+                🧠
+            </div>
 
-        <p style="margin-top:10px;">
-            แนวคิดหลักคือ เมื่อมีข้อมูลใหม่เข้ามา
-            KNN จะค้นหาข้อมูลเดิมที่มีลักษณะใกล้เคียงที่สุดจำนวน
-            <strong>K ตัว</strong>
-            แล้วใช้เสียงส่วนใหญ่ในการตัดสิน Class
-        </p>
-    </section>
+            <div>
+                <div class="kicker">
+                    MACHINE LEARNING · INTERACTIVE LAB
+                </div>
+
+                <h1>
+                    KNN Visual Lab
+                </h1>
+
+                <div class="subtitle">
+                    เมื่อ “เพื่อนบ้าน” ช่วยให้ Machine ตัดสินใจ
+                </div>
+            </div>
+
+        </div>
+
+        <div class="status">
+            ● <span>Interactive Mode</span>
+        </div>
+
+    </header>
 
 
     <!-- PROCESS -->
-    <section class="steps">
+    <section class="process">
 
-        <div class="step active" id="step1">
-            <div class="step-number">1</div>
-            ข้อมูลเดิม
+        <div class="process-item active" id="process1">
+            <div class="process-number">01</div>
+            <div class="process-title">DATA</div>
         </div>
 
-        <div class="step" id="step2">
-            <div class="step-number">2</div>
-            คำนวณ Distance
+        <div class="process-item" id="process2">
+            <div class="process-number">02</div>
+            <div class="process-title">DISTANCE</div>
         </div>
 
-        <div class="step" id="step3">
-            <div class="step-number">3</div>
-            เลือก K เพื่อนบ้าน
+        <div class="process-item" id="process3">
+            <div class="process-number">03</div>
+            <div class="process-title">NEIGHBORS</div>
         </div>
 
-        <div class="step" id="step4">
-            <div class="step-number">4</div>
-            Majority Vote
+        <div class="process-item" id="process4">
+            <div class="process-number">04</div>
+            <div class="process-title">VOTE</div>
         </div>
 
-        <div class="step" id="step5">
-            <div class="step-number">5</div>
-            Prediction
+        <div class="process-item" id="process5">
+            <div class="process-number">05</div>
+            <div class="process-title">PREDICTION</div>
         </div>
 
     </section>
 
 
-    <div class="main-grid">
+    <!-- MAIN -->
+    <main class="main">
 
-        <!-- LEFT -->
-        <section class="card">
 
-            <h2>📍 แผนที่ผู้ป่วย</h2>
+        <!-- DATA CARD -->
+        <section class="card data-card">
 
-            <p>
-                แกน X = ระดับน้ำตาล (X1)
-                <br>
-                แกน Y = ความดันโลหิต (X2)
-            </p>
+            <div class="card-head">
 
-            <div class="chart-wrapper" id="chart">
+                <h2>ฐานข้อมูลผู้ป่วย</h2>
 
-                <div class="axis-x">
-                    ระดับน้ำตาล (X1)
-                </div>
-
-                <div class="axis-y">
-                    ความดันโลหิต (X2)
-                </div>
+                <span class="badge">
+                    TRAIN DATA
+                </span>
 
             </div>
 
-            <div class="controls">
+            <div class="card-body">
 
-                <button onclick="nextStep()">
-                    ▶ ขั้นตอนถัดไป
-                </button>
+                <div class="patient">
 
-                <button class="secondary" onclick="resetVisualization()">
-                    ↺ เริ่มใหม่
-                </button>
+                    <div class="letter blue">
+                        A
+                    </div>
+
+                    <div>
+                        <div class="patient-name">
+                            ผู้ป่วย A
+                        </div>
+
+                        <div class="patient-coord">
+                            (1, 2)
+                        </div>
+                    </div>
+
+                    <span class="tag blue">
+                        ปกติ
+                    </span>
+
+                </div>
+
+
+                <div class="patient">
+
+                    <div class="letter blue">
+                        B
+                    </div>
+
+                    <div>
+                        <div class="patient-name">
+                            ผู้ป่วย B
+                        </div>
+
+                        <div class="patient-coord">
+                            (2, 3)
+                        </div>
+                    </div>
+
+                    <span class="tag blue">
+                        ปกติ
+                    </span>
+
+                </div>
+
+
+                <div class="patient">
+
+                    <div class="letter red">
+                        C
+                    </div>
+
+                    <div>
+                        <div class="patient-name">
+                            ผู้ป่วย C
+                        </div>
+
+                        <div class="patient-coord">
+                            (5, 6)
+                        </div>
+                    </div>
+
+                    <span class="tag red">
+                        เสี่ยงสูง
+                    </span>
+
+                </div>
+
+
+                <div class="patient">
+
+                    <div class="letter red">
+                        D
+                    </div>
+
+                    <div>
+                        <div class="patient-name">
+                            ผู้ป่วย D
+                        </div>
+
+                        <div class="patient-coord">
+                            (6, 5)
+                        </div>
+                    </div>
+
+                    <span class="tag red">
+                        เสี่ยงสูง
+                    </span>
+
+                </div>
+
+
+                <div class="query-box">
+
+                    <div class="query-label">
+                        NEW PATIENT · QUERY POINT
+                    </div>
+
+                    <div class="query-value">
+                        Q = (2, 2)
+                    </div>
+
+                    <div class="query-desc">
+                        จุดใหม่ที่ต้องการให้ KNN ทำนาย
+                    </div>
+
+                </div>
 
             </div>
 
         </section>
 
 
-        <!-- RIGHT -->
-        <section class="card">
+        <!-- CHART -->
+        <section class="card chart-card">
 
-            <h2>⚙️ ตั้งค่า K</h2>
+            <div class="card-head">
 
-            <div class="k-control">
+                <h2>
+                    🧭 KNN Decision Map
+                </h2>
 
-                <label>
-                    จำนวนเพื่อนบ้าน K =
-                </label>
+                <span class="badge">
+                    LIVE VISUALIZATION
+                </span>
 
-                <div class="k-value" id="kValue">
-                    3
+            </div>
+
+
+            <div class="chart-area">
+
+                <div class="chart" id="chart">
+
+                    <div class="axis-x"></div>
+                    <div class="axis-y"></div>
+
+                    <!-- POINTS WILL BE CREATED BY JS -->
+
                 </div>
 
-                <input
-                    type="range"
-                    min="1"
-                    max="4"
-                    value="3"
-                    id="kSlider"
-                    oninput="changeK()"
-                >
 
-                <small>
-                    เลื่อนเพื่อทดลองเปลี่ยนค่า K
-                </small>
+                <div class="controls">
 
-            </div>
+                    <button onclick="nextStep()">
+                        ▶ ขั้นตอนถัดไป
+                    </button>
 
+                    <button onclick="autoPlay()">
+                        ✦ AUTO PLAY
+                    </button>
 
-            <h2>📐 สูตร Distance</h2>
+                    <button
+                        class="secondary"
+                        onclick="resetAll()"
+                    >
+                        ↺ RESET
+                    </button>
 
-            <div class="formula">
-                d(P,Q) =
-                √[(p₁-q₁)² + (p₂-q₂)²]
-            </div>
+                </div>
 
 
-            <div id="calculation">
+                <div class="explanation">
 
-                <p>
-                    กด <strong>“ขั้นตอนถัดไป”</strong>
-                    เพื่อเริ่มการทำงานของ KNN
-                </p>
+                    <div class="mini">
+                        WHAT IS HAPPENING?
+                    </div>
+
+                    <h3 id="explainTitle">
+                        เริ่มจากข้อมูลที่เรารู้คำตอบแล้ว
+                    </h3>
+
+                    <p id="explainText">
+                        จุดสีน้ำเงินคือผู้ป่วยกลุ่ม “ปกติ”
+                        จุดสีแดงคือผู้ป่วยกลุ่ม “เสี่ยงสูง”
+                        และ Q คือผู้ป่วยใหม่ที่เราต้องการทำนาย
+                    </p>
+
+                </div>
 
             </div>
 
         </section>
 
-    </div>
+
+        <!-- ANALYSIS -->
+        <section class="card">
+
+            <div class="card-head">
+
+                <h2>
+                    ⚙️ KNN Analysis
+                </h2>
+
+                <span class="badge">
+                    K = 3
+                </span>
+
+            </div>
 
 
-    <!-- DATA -->
-    <section class="card" style="margin-top:25px;">
+            <div class="card-body">
 
-        <h2>📋 ฐานข้อมูลผู้ป่วย</h2>
+                <div class="k-box">
 
-        <table class="data-table">
+                    <div class="k-label">
+                        NUMBER OF NEIGHBORS
+                    </div>
 
-            <thead>
-                <tr>
-                    <th>ผู้ป่วย</th>
-                    <th>น้ำตาล X1</th>
-                    <th>ความดัน X2</th>
-                    <th>Class</th>
-                </tr>
-            </thead>
+                    <div class="k-value" id="kValue">
+                        3
+                    </div>
 
-            <tbody>
+                    <input
+                        id="kSlider"
+                        type="range"
+                        min="1"
+                        max="4"
+                        value="3"
+                        oninput="changeK()"
+                    >
 
-                <tr>
-                    <td>A</td>
-                    <td>1</td>
-                    <td>2</td>
-                    <td>
-                        <span class="badge normal">ปกติ</span>
-                    </td>
-                </tr>
+                </div>
 
-                <tr>
-                    <td>B</td>
-                    <td>2</td>
-                    <td>3</td>
-                    <td>
-                        <span class="badge normal">ปกติ</span>
-                    </td>
-                </tr>
 
-                <tr>
-                    <td>C</td>
-                    <td>5</td>
-                    <td>6</td>
-                    <td>
-                        <span class="badge risk">เสี่ยงสูง</span>
-                    </td>
-                </tr>
+                <div class="formula">
 
-                <tr>
-                    <td>D</td>
-                    <td>7</td>
-                    <td>5</td>
-                    <td>
-                        <span class="badge risk">เสี่ยงสูง</span>
-                    </td>
-                </tr>
+                    d(P,Q)
+                    =
+                    √[(p₁-q₁)² + (p₂-q₂)²]
 
-                <tr>
-                    <td><strong>Q</strong></td>
-                    <td><strong>2</strong></td>
-                    <td><strong>2</strong></td>
-                    <td>
-                        <span class="badge" style="background:#fff1bd;">
-                            ?
+                    <small>
+                        Euclidean Distance
+                    </small>
+
+                </div>
+
+
+                <div class="distance-title">
+                    DISTANCE FROM Q
+                </div>
+
+                <div id="distanceList">
+
+                    <div class="distance-row">
+
+                        <span>—</span>
+
+                        <span class="distance-class">
+                            กดขั้นตอนถัดไป
                         </span>
-                    </td>
-                </tr>
 
-            </tbody>
+                        <span>—</span>
 
-        </table>
+                    </div>
 
-    </section>
+                </div>
 
 
-    <!-- EXPLANATION -->
-    <section class="explain">
+                <div class="vote">
 
-        <h2>💡 KNN ทำงานอย่างไร?</h2>
+                    <div class="distance-title">
+                        MAJORITY VOTE
+                    </div>
 
-        <p style="margin-top:10px;">
-            KNN ไม่ได้สร้างสมการหรือโมเดลขึ้นมาก่อน
-            แต่เมื่อมีผู้ป่วยรายใหม่เข้ามา
-            ระบบจะเปรียบเทียบระยะห่างระหว่างผู้ป่วยใหม่กับข้อมูลเดิม
-        </p>
 
-        <br>
+                    <div class="vote-row">
 
-        <p>
-            <strong>ใกล้กว่า → มีความคล้ายกันมากกว่า</strong>
-        </p>
+                        <div class="vote-top">
 
-        <p>
-            จากนั้นเลือกข้อมูลที่ใกล้ที่สุดจำนวน K ตัว
-            และดูว่า Class ใดมีจำนวนมากที่สุด
-        </p>
+                            <span>
+                                🔵 ปกติ
+                            </span>
 
-    </section>
+                            <strong id="normalVotes">
+                                0
+                            </strong>
+
+                        </div>
+
+                        <div class="vote-bar">
+
+                            <div
+                                id="normalBar"
+                                class="vote-fill blue"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="vote-row">
+
+                        <div class="vote-top">
+
+                            <span>
+                                🔴 เสี่ยงสูง
+                            </span>
+
+                            <strong id="riskVotes">
+                                0
+                            </strong>
+
+                        </div>
+
+                        <div class="vote-bar">
+
+                            <div
+                                id="riskBar"
+                                class="vote-fill red"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="result" id="result">
+
+                    <div class="result-label">
+                        FINAL PREDICTION
+                    </div>
+
+                    <div
+                        class="result-value"
+                        id="resultValue"
+                    >
+                        —
+                    </div>
+
+                    <div class="result-desc">
+                        ยังไม่มีการทำนาย
+                    </div>
+
+                </div>
+
+
+                <div class="tie">
+
+                    ⚡ <strong>กรณี Distance เท่ากัน</strong><br>
+
+                    C และ D อยู่ห่างจาก Q เท่ากัน
+                    คือ 5.00 แต่ทั้งสองอยู่ใน Class
+                    “เสี่ยงสูง” เหมือนกัน จึงไม่กระทบ
+                    ต่อผลการทำนาย
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <div class="footer">
+        K-Nearest Neighbors (KNN Classification) · Machine Learning Theory Visualization
+    </div>
 
 </div>
 
 
-<footer>
-    KNN Interactive Visualization • Machine Learning Theory
-</footer>
-
-
 <script>
+
+/* =========================================
+   DATA
+========================================= */
 
 const patients = [
 
@@ -632,35 +1444,36 @@ const patients = [
         id: "A",
         x: 1,
         y: 2,
-        class: "ปกติ",
-        type: "normal"
+        className: "ปกติ",
+        type: "blue"
     },
 
     {
         id: "B",
         x: 2,
         y: 3,
-        class: "ปกติ",
-        type: "normal"
+        className: "ปกติ",
+        type: "blue"
     },
 
     {
         id: "C",
         x: 5,
         y: 6,
-        class: "เสี่ยงสูง",
-        type: "risk"
+        className: "เสี่ยงสูง",
+        type: "red"
     },
 
     {
         id: "D",
-        x: 7,
+        x: 6,
         y: 5,
-        class: "เสี่ยงสูง",
-        type: "risk"
+        className: "เสี่ยงสูง",
+        type: "red"
     }
 
 ];
+
 
 const query = {
     id: "Q",
@@ -668,167 +1481,906 @@ const query = {
     y: 2
 };
 
-let k = 3;
+
 let currentStep = 1;
 
+let K = 3;
 
-/* -------------------------
-   CREATE GRAPH
-------------------------- */
 
-function createPoint(patient) {
+/* =========================================
+   CREATE POINT
+========================================= */
 
-    const chart = document.getElementById("chart");
+function createPoint(data, type = null) {
 
-    const point = document.createElement("div");
+    const chart =
+        document.getElementById("chart");
 
-    point.className =
-        "point " +
-        (patient.type || "query");
+    const point =
+        document.createElement("div");
 
-    point.id = "point-" + patient.id;
+    if (type === "query") {
 
-    point.textContent = patient.id;
+        point.className =
+            "point q";
+
+    } else {
+
+        point.className =
+            "point " + data.type;
+
+    }
+
+    point.id =
+        "point-" + data.id;
+
+    point.textContent =
+        data.id;
+
 
     /*
-        X = 0-8
-        Y = 0-8
+        Coordinate system:
+
+        X = 0 → 8
+        Y = 0 → 8
     */
 
-    const left = (patient.x / 8) * 100;
+    const left =
+        (data.x / 8) * 100;
 
-    const bottom = (patient.y / 8) * 100;
+    const bottom =
+        (data.y / 8) * 100;
 
-    point.style.left = left + "%";
 
-    point.style.bottom = bottom + "%";
+    point.style.left =
+        left + "%";
+
+    point.style.bottom =
+        bottom + "%";
+
 
     chart.appendChild(point);
 }
 
 
+/* =========================================
+   DRAW ALL POINTS
+========================================= */
+
 function drawPoints() {
 
-    const chart = document.getElementById("chart");
+    const chart =
+        document.getElementById("chart");
 
-    document
-        .querySelectorAll(".point")
+    chart
+        .querySelectorAll(".point,.distance-line,.distance-label,.ring")
         .forEach(el => el.remove());
 
-    patients.forEach(createPoint);
 
-    createPoint({
-        ...query,
-        type: "query"
+    patients.forEach(patient => {
+
+        createPoint(patient);
+
     });
-}
 
 
-/* -------------------------
-   DISTANCE
-------------------------- */
-
-function calculateDistance(p) {
-
-    return Math.sqrt(
-        Math.pow(p.x - query.x, 2) +
-        Math.pow(p.y - query.y, 2)
+    createPoint(
+        query,
+        "query"
     );
 
 }
 
 
-function getDistances() {
+/* =========================================
+   EUCLIDEAN DISTANCE
+========================================= */
 
-    return patients
-        .map(p => ({
-            ...p,
-            distance: calculateDistance(p)
-        }))
-        .sort((a, b) => a.distance - b.distance);
+function calculateDistance(patient) {
+
+    return Math.sqrt(
+
+        Math.pow(
+            patient.x - query.x,
+            2
+        )
+
+        +
+
+        Math.pow(
+            patient.y - query.y,
+            2
+        )
+
+    );
 
 }
 
 
-/* -------------------------
-   DRAW CONNECTION LINE
-------------------------- */
+function getSortedDistances() {
 
-function drawLine(from, to) {
+    return patients
+        .map(patient => {
+
+            return {
+
+                ...patient,
+
+                distance:
+                    calculateDistance(patient)
+
+            };
+
+        })
+
+        .sort(
+
+            (a,b) =>
+                a.distance -
+                b.distance
+
+        );
+
+}
+
+
+/* =========================================
+   DRAW LINE
+========================================= */
+
+function drawDistanceLine(patient) {
 
     const chart =
         document.getElementById("chart");
 
+
+    const x1 =
+        (query.x / 8)
+        * chart.clientWidth;
+
+
+    const y1 =
+        chart.clientHeight
+        -
+        (query.y / 8)
+        * chart.clientHeight;
+
+
+    const x2 =
+        (patient.x / 8)
+        * chart.clientWidth;
+
+
+    const y2 =
+        chart.clientHeight
+        -
+        (patient.y / 8)
+        * chart.clientHeight;
+
+
+    const dx =
+        x2 - x1;
+
+
+    const dy =
+        y2 - y1;
+
+
+    const length =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+
+    const angle =
+        Math.atan2(dy,dx)
+        *
+        180
+        /
+        Math.PI;
+
+
     const line =
         document.createElement("div");
 
-    line.className = "line show";
 
-    const x1 =
-        (from.x / 8) *
-        chart.clientWidth;
+    line.className =
+        "distance-line show";
 
-    const y1 =
-        chart.clientHeight -
-        (from.y / 8) *
-        chart.clientHeight;
-
-    const x2 =
-        (to.x / 8) *
-        chart.clientWidth;
-
-    const y2 =
-        chart.clientHeight -
-        (to.y / 8) *
-        chart.clientHeight;
-
-    const dx = x2 - x1;
-
-    const dy = y2 - y1;
-
-    const length =
-        Math.sqrt(dx * dx + dy * dy);
-
-    const angle =
-        Math.atan2(dy, dx) *
-        180 /
-        Math.PI;
 
     line.style.width =
         length + "px";
 
+
     line.style.left =
         x1 + "px";
+
 
     line.style.top =
         y1 + "px";
 
+
     line.style.transform =
         `rotate(${angle}deg)`;
 
+
     chart.appendChild(line);
+
+
+    /*
+        Distance Label
+    */
+
+    const label =
+        document.createElement("div");
+
+
+    label.className =
+        "distance-label show";
+
+
+    label.textContent =
+        patient.distance.toFixed(2);
+
+
+    label.style.left =
+        ((patient.x + query.x) / 2 / 8)
+        * 100 + "%";
+
+
+    label.style.bottom =
+        ((patient.y + query.y) / 2 / 8)
+        * 100 + "%";
+
+
+    chart.appendChild(label);
+
 }
 
 
-/* -------------------------
-   STEP SYSTEM
-------------------------- */
+/* =========================================
+   DRAW K RING
+========================================= */
 
-function updateSteps() {
+function drawRing() {
 
-    for (let i = 1; i <= 5; i++) {
+    const chart =
+        document.getElementById("chart");
 
-        document
-            .getElementById("step" + i)
-            .classList.toggle(
-                "active",
-                i <= currentStep
+    const distances =
+        getSortedDistances();
+
+
+    const farthest =
+        distances[K - 1];
+
+
+    const radius =
+        Math.sqrt(
+
+            Math.pow(
+                farthest.x - query.x,
+                2
+            )
+
+            +
+
+            Math.pow(
+                farthest.y - query.y,
+                2
+            )
+
+        );
+
+
+    const ring =
+        document.createElement("div");
+
+
+    ring.className =
+        "ring show";
+
+
+    /*
+        Convert coordinate distance
+        into chart pixels.
+    */
+
+    const size =
+        radius * 2 / 8
+        * chart.clientWidth;
+
+
+    ring.style.width =
+        size + "px";
+
+
+    ring.style.height =
+        size + "px";
+
+
+    ring.style.left =
+        (query.x / 8) * 100 + "%";
+
+
+    ring.style.bottom =
+        (query.y / 8) * 100 + "%";
+
+
+    chart.appendChild(ring);
+
+}
+
+
+/* =========================================
+   PROCESS STEPS
+========================================= */
+
+function updateProcess() {
+
+    for (
+        let i = 1;
+        i <= 5;
+        i++
+    ) {
+
+        const item =
+            document.getElementById(
+                "process" + i
             );
+
+
+        item.classList.toggle(
+            "active",
+            i <= currentStep
+        );
 
     }
 
 }
 
+
+/* =========================================
+   STEP EXPLANATION
+========================================= */
+
+function setExplanation(title,text) {
+
+    document.getElementById(
+        "explainTitle"
+    ).textContent = title;
+
+
+    document.getElementById(
+        "explainText"
+    ).textContent = text;
+
+}
+
+
+/* =========================================
+   SHOW STEP
+========================================= */
+
+function showStep() {
+
+    updateProcess();
+
+
+    const distances =
+        getSortedDistances();
+
+
+    /*
+        STEP 1
+    */
+
+    if (currentStep === 1) {
+
+        setExplanation(
+
+            "เริ่มจากข้อมูลที่เรารู้คำตอบแล้ว",
+
+            "จุดสีน้ำเงินคือผู้ป่วยกลุ่มปกติ จุดสีแดงคือผู้ป่วยกลุ่มเสี่ยงสูง และ Q คือข้อมูลใหม่ที่เรายังไม่รู้ Class"
+
+        );
+
+
+        clearVisuals();
+
+        resetAnalysis();
+
+    }
+
+
+    /*
+        STEP 2
+    */
+
+    if (currentStep === 2) {
+
+        setExplanation(
+
+            "วัดว่าใครอยู่ใกล้ Q มากที่สุด",
+
+            "KNN ใช้ Euclidean Distance เพื่อวัดระยะห่างระหว่าง Q กับผู้ป่วยแต่ละคน ยิ่งระยะน้อย แสดงว่ายิ่งใกล้"
+
+        );
+
+
+        clearVisuals();
+
+
+        distances.forEach(
+
+            patient => {
+
+                drawDistanceLine(
+                    patient
+                );
+
+            }
+
+        );
+
+
+        showDistanceTable(
+            false
+        );
+
+    }
+
+
+    /*
+        STEP 3
+    */
+
+    if (currentStep === 3) {
+
+        setExplanation(
+
+            "เลือกเพื่อนบ้านที่ใกล้ที่สุด",
+
+            `กำหนด K = ${K} ดังนั้น KNN จะเลือกผู้ป่วยที่มีระยะห่างจาก Q น้อยที่สุด ${K} คน`
+
+        );
+
+
+        clearVisuals();
+
+
+        distances
+            .forEach(patient => {
+
+                drawDistanceLine(
+                    patient
+                );
+
+            });
+
+
+        drawRing();
+
+
+        highlightNeighbors();
+
+
+        showDistanceTable(
+            true
+        );
+
+    }
+
+
+    /*
+        STEP 4
+    */
+
+    if (currentStep === 4) {
+
+        setExplanation(
+
+            "ให้เพื่อนบ้านแต่ละคนโหวต",
+
+            "KNN Classification ใช้ Majority Vote หรือเสียงข้างมาก Class ที่มีจำนวนมากที่สุดจะถูกเลือกเป็นคำตอบ"
+
+        );
+
+
+        clearVisuals();
+
+
+        distances
+            .forEach(patient => {
+
+                drawDistanceLine(
+                    patient
+                );
+
+            });
+
+
+        drawRing();
+
+
+        highlightNeighbors();
+
+
+        calculateVote();
+
+    }
+
+
+    /*
+        STEP 5
+    */
+
+    if (currentStep === 5) {
+
+        setExplanation(
+
+            "Machine ตัดสินใจแล้ว",
+
+            "Q มีเพื่อนบ้านที่ใกล้ที่สุดเป็นกลุ่มปกติมากกว่า จึงถูกจัดให้อยู่ใน Class ปกติ"
+
+        );
+
+
+        clearVisuals();
+
+
+        distances
+            .forEach(patient => {
+
+                drawDistanceLine(
+                    patient
+                );
+
+            });
+
+
+        drawRing();
+
+
+        highlightNeighbors();
+
+
+        calculateVote();
+
+
+        showResult();
+
+    }
+
+}
+
+
+/* =========================================
+   CLEAR VISUALS
+========================================= */
+
+function clearVisuals() {
+
+    document
+        .querySelectorAll(
+            ".distance-line,.distance-label,.ring"
+        )
+        .forEach(
+            el => el.remove()
+        );
+
+
+    document
+        .querySelectorAll(".point")
+        .forEach(
+            point => {
+
+                point.classList.remove(
+                    "neighbor",
+                    "dim"
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================
+   HIGHLIGHT NEIGHBORS
+========================================= */
+
+function highlightNeighbors() {
+
+    const distances =
+        getSortedDistances();
+
+
+    distances.forEach(
+
+        (patient,index) => {
+
+            const point =
+                document.getElementById(
+                    "point-" + patient.id
+                );
+
+
+            if (index < K) {
+
+                point.classList.add(
+                    "neighbor"
+                );
+
+            } else {
+
+                point.classList.add(
+                    "dim"
+                );
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* =========================================
+   DISTANCE TABLE
+========================================= */
+
+function showDistanceTable(selectedOnly) {
+
+    const container =
+        document.getElementById(
+            "distanceList"
+        );
+
+
+    const distances =
+        getSortedDistances();
+
+
+    const visible =
+        selectedOnly
+            ? distances.slice(0,K)
+            : distances;
+
+
+    container.innerHTML = "";
+
+
+    visible.forEach(
+
+        (patient,index) => {
+
+            const row =
+                document.createElement("div");
+
+
+            row.className =
+                "distance-row";
+
+
+            if (selectedOnly) {
+
+                row.classList.add(
+                    "selected"
+                );
+
+            }
+
+
+            row.innerHTML = `
+
+                <span class="distance-num">
+                    ${index + 1}
+                </span>
+
+                <span>
+
+                    <strong>
+                        ${patient.id}
+                    </strong>
+
+                    <span class="distance-class">
+                        · ${patient.className}
+                    </span>
+
+                </span>
+
+                <span class="distance-value">
+                    ${patient.distance.toFixed(2)}
+                </span>
+
+            `;
+
+
+            container.appendChild(row);
+
+        }
+
+    );
+
+}
+
+
+/* =========================================
+   VOTE
+========================================= */
+
+function calculateVote() {
+
+    const distances =
+        getSortedDistances();
+
+
+    const selected =
+        distances.slice(0,K);
+
+
+    const normal =
+        selected.filter(
+            p =>
+                p.className === "ปกติ"
+        ).length;
+
+
+    const risk =
+        selected.filter(
+            p =>
+                p.className === "เสี่ยงสูง"
+        ).length;
+
+
+    document.getElementById(
+        "normalVotes"
+    ).textContent = normal;
+
+
+    document.getElementById(
+        "riskVotes"
+    ).textContent = risk;
+
+
+    document.getElementById(
+        "normalBar"
+    ).style.width =
+        (normal / K * 100) + "%";
+
+
+    document.getElementById(
+        "riskBar"
+    ).style.width =
+        (risk / K * 100) + "%";
+
+}
+
+
+/* =========================================
+   RESULT
+========================================= */
+
+function showResult() {
+
+    const distances =
+        getSortedDistances();
+
+
+    const selected =
+        distances.slice(0,K);
+
+
+    const normal =
+        selected.filter(
+            p =>
+                p.className === "ปกติ"
+        ).length;
+
+
+    const risk =
+        selected.filter(
+            p =>
+                p.className === "เสี่ยงสูง"
+        ).length;
+
+
+    const result =
+        normal > risk
+            ? "ปกติ"
+            : "เสี่ยงสูง";
+
+
+    const resultBox =
+        document.getElementById(
+            "result"
+        );
+
+
+    resultBox.classList.add(
+        "visible"
+    );
+
+
+    document.getElementById(
+        "resultValue"
+    ).textContent =
+        "Q → " + result;
+
+
+    resultBox.querySelector(
+        ".result-desc"
+    ).textContent =
+        `Majority Vote: ${Math.max(normal,risk)} จาก ${K} เสียง`;
+
+}
+
+
+/* =========================================
+   RESET ANALYSIS
+========================================= */
+
+function resetAnalysis() {
+
+    document.getElementById(
+        "distanceList"
+    ).innerHTML = `
+
+        <div class="distance-row">
+
+            <span>—</span>
+
+            <span class="distance-class">
+                กดขั้นตอนถัดไป
+            </span>
+
+            <span>—</span>
+
+        </div>
+
+    `;
+
+
+    document.getElementById(
+        "normalVotes"
+    ).textContent = "0";
+
+
+    document.getElementById(
+        "riskVotes"
+    ).textContent = "0";
+
+
+    document.getElementById(
+        "normalBar"
+    ).style.width = "0";
+
+
+    document.getElementById(
+        "riskBar"
+    ).style.width = "0";
+
+
+    document.getElementById(
+        "result"
+    ).classList.remove(
+        "visible"
+    );
+
+
+    document.getElementById(
+        "resultValue"
+    ).textContent = "—";
+
+}
+
+
+/* =========================================
+   NEXT STEP
+========================================= */
 
 function nextStep() {
 
@@ -843,311 +2395,116 @@ function nextStep() {
 }
 
 
-function showStep() {
+/* =========================================
+   AUTO PLAY
+========================================= */
 
-    updateSteps();
+let autoTimer = null;
 
-    const calc =
-        document.getElementById("calculation");
+function autoPlay() {
 
-    const distances =
-        getDistances();
+    clearInterval(autoTimer);
 
-    /* STEP 1 */
 
-    if (currentStep === 1) {
+    resetAll();
 
-        calc.innerHTML = `
 
-            <h3>1️⃣ ข้อมูลเริ่มต้น</h3>
+    autoTimer =
+        setInterval(
 
-            <p style="margin-top:8px;">
-                เรามีผู้ป่วยที่รู้ Class แล้ว 4 ราย
-                และมีผู้ป่วยใหม่ Q ที่ต้องการทำนาย
-            </p>
+            () => {
 
-            <div class="formula">
-                Q = (2,2)
-            </div>
+                if (
+                    currentStep >= 5
+                ) {
 
-        `;
+                    clearInterval(
+                        autoTimer
+                    );
 
-    }
+                    return;
 
+                }
 
-    /* STEP 2 */
 
-    if (currentStep === 2) {
+                currentStep++;
 
-        let html = `
-            <h3>2️⃣ คำนวณระยะห่าง</h3>
+                showStep();
 
-            <p style="margin-top:8px;">
-                ใช้ Euclidean Distance
-            </p>
-        `;
+            },
 
-        distances.forEach(p => {
+            1700
 
-            html += `
-
-                <div class="patient-row">
-
-                    <strong>${p.id}</strong>
-
-                    <span>
-                        √[(${p.x}-2)² + (${p.y}-2)²]
-                    </span>
-
-                    <strong>
-                        ${p.distance.toFixed(2)}
-                    </strong>
-
-                </div>
-
-            `;
-
-        });
-
-        calc.innerHTML = html;
-
-        document
-            .querySelectorAll(".line")
-            .forEach(e => e.remove());
-
-        distances.forEach(p => {
-
-            drawLine(query, p);
-
-        });
-
-    }
-
-
-    /* STEP 3 */
-
-    if (currentStep === 3) {
-
-        const nearest =
-            distances.slice(0, k);
-
-        calc.innerHTML = `
-
-            <h3>3️⃣ เลือก ${k} เพื่อนบ้านที่ใกล้ที่สุด</h3>
-
-            <div class="distance-list">
-
-                ${nearest.map(p => `
-
-                    <div class="patient-row selected">
-
-                        <strong>${p.id}</strong>
-
-                        <span>
-                            ${p.class}
-                        </span>
-
-                        <strong>
-                            ${p.distance.toFixed(2)}
-                        </strong>
-
-                    </div>
-
-                `).join("")}
-
-            </div>
-
-        `;
-
-        document
-            .querySelectorAll(".point")
-            .forEach(e =>
-                e.classList.remove("neighbor")
-            );
-
-        nearest.forEach(p => {
-
-            document
-                .getElementById("point-" + p.id)
-                .classList.add("neighbor");
-
-        });
-
-    }
-
-
-    /* STEP 4 */
-
-    if (currentStep === 4) {
-
-        const nearest =
-            distances.slice(0, k);
-
-        const normal =
-            nearest.filter(
-                p => p.class === "ปกติ"
-            ).length;
-
-        const risk =
-            nearest.filter(
-                p => p.class === "เสี่ยงสูง"
-            ).length;
-
-        calc.innerHTML = `
-
-            <h3>4️⃣ Majority Vote</h3>
-
-            <p style="margin-top:8px;">
-                ให้แต่ละเพื่อนบ้านมี 1 เสียง
-            </p>
-
-            <div class="formula">
-
-                🔵 ปกติ = ${normal} เสียง
-
-                <br>
-
-                🔴 เสี่ยงสูง = ${risk} เสียง
-
-            </div>
-
-            <p style="text-align:center;">
-                Class ที่มีจำนวนมากที่สุด
-                จะถูกเลือกเป็นคำตอบ
-            </p>
-
-        `;
-
-    }
-
-
-    /* STEP 5 */
-
-    if (currentStep === 5) {
-
-        const nearest =
-            distances.slice(0, k);
-
-        const normal =
-            nearest.filter(
-                p => p.class === "ปกติ"
-            ).length;
-
-        const risk =
-            nearest.filter(
-                p => p.class === "เสี่ยงสูง"
-            ).length;
-
-        const result =
-            normal >= risk
-                ? "ปกติ"
-                : "เสี่ยงสูง";
-
-        calc.innerHTML = `
-
-            <h3>5️⃣ ผลลัพธ์ของ KNN</h3>
-
-            <div class="result">
-
-                <div>
-                    ผู้ป่วยใหม่ Q = (2,2)
-                </div>
-
-                <div class="big">
-                    ${result}
-                </div>
-
-                <p>
-                    เพราะมีเสียงข้างมาก
-                    ${Math.max(normal, risk)}
-                    จาก ${k} เพื่อนบ้าน
-                </p>
-
-            </div>
-
-            <div class="formula">
-
-                Prediction(Q)
-                =
-                <strong>${result}</strong>
-
-            </div>
-
-        `;
-
-    }
+        );
 
 }
 
 
-/* -------------------------
+/* =========================================
    CHANGE K
-------------------------- */
+========================================= */
 
 function changeK() {
 
-    k =
-        parseInt(
-            document.getElementById("kSlider").value
+    K =
+        Number(
+            document.getElementById(
+                "kSlider"
+            ).value
         );
 
-    document.getElementById("kValue")
-        .textContent = k;
 
-    /*
-       ถ้าเปลี่ยน K
-       ให้กลับมาแสดงขั้นตอนที่ 1
-    */
+    document.getElementById(
+        "kValue"
+    ).textContent = K;
+
 
     currentStep = 1;
 
-    document
-        .querySelectorAll(".line")
-        .forEach(e => e.remove());
-
-    document
-        .querySelectorAll(".point")
-        .forEach(e =>
-            e.classList.remove("neighbor")
-        );
 
     showStep();
 
 }
 
 
-/* -------------------------
+/* =========================================
    RESET
-------------------------- */
+========================================= */
 
-function resetVisualization() {
+function resetAll() {
+
+    clearInterval(
+        autoTimer
+    );
+
 
     currentStep = 1;
 
-    k = 3;
 
-    document.getElementById("kSlider")
-        .value = 3;
+    K = 3;
 
-    document.getElementById("kValue")
-        .textContent = 3;
 
-    document
-        .querySelectorAll(".line")
-        .forEach(e => e.remove());
+    document.getElementById(
+        "kSlider"
+    ).value = 3;
 
-    document
-        .querySelectorAll(".point")
-        .forEach(e =>
-            e.classList.remove("neighbor")
-        );
+
+    document.getElementById(
+        "kValue"
+    ).textContent = 3;
+
+
+    drawPoints();
+
 
     showStep();
 
 }
 
 
-/* START */
+/* =========================================
+   START
+========================================= */
 
 drawPoints();
 

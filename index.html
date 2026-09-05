@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -714,89 +714,55 @@ nav{
 }
 
 
-.idea-card{
-
-    padding:30px;
-
-    min-height:220px;
-
-    border-radius:22px;
-
-    border:1px solid var(--line);
-
-    background:
-        rgba(255,255,255,.025);
-
-    position:relative;
-
-    overflow:hidden;
-
-    transition:.3s;
+.idea-card:nth-child(1){
+    border-color:rgba(109,140,255,.42);
+    background:rgba(109,140,255,.035);
 }
 
-
-.idea-card:hover{
-
-    transform:translateY(-5px);
-
-    border-color:
-        rgba(109,140,255,.3);
-
-    background:
-        rgba(109,140,255,.04);
+.idea-card:nth-child(1) .idea-number{
+    color:#7894ee;
 }
 
-
-.idea-number{
-
-    font-family:"Space Mono",monospace;
-
-    font-size:9px;
-
-    color:#555e6e;
-
-    margin-bottom:40px;
-}
-
-
-.idea-card h3{
-
-    font-size:25px;
-
-    letter-spacing:-.04em;
-}
-
-
-.idea-card p{
-
-    margin-top:10px;
-
-    color:#737c8b;
-
-    font-size:12px;
-
-    line-height:1.7;
-}
-
-
-.card-orb{
-
-    position:absolute;
-
-    width:90px;
-    height:90px;
-
-    border-radius:50%;
-
-    right:-30px;
-    bottom:-35px;
-
-    background:
-        rgba(109,140,255,.08);
-
+.idea-card:nth-child(1) .card-orb{
+    background:rgba(109,140,255,.10);
     box-shadow:
-        0 0 50px
-            rgba(109,140,255,.08);
+        0 0 50px rgba(109,140,255,.10);
+}
+
+
+/* 02 — SELECT / PURPLE */
+
+.idea-card:nth-child(2){
+    border-color:rgba(157,132,255,.38);
+    background:rgba(157,132,255,.03);
+}
+
+.idea-card:nth-child(2) .idea-number{
+    color:#a18bea;
+}
+
+.idea-card:nth-child(2) .card-orb{
+    background:rgba(157,132,255,.09);
+    box-shadow:
+        0 0 50px rgba(157,132,255,.09);
+}
+
+
+/* 03 — VOTE / PINK */
+
+.idea-card:nth-child(3){
+    border-color:rgba(255,113,132,.38);
+    background:rgba(255,113,132,.03);
+}
+
+.idea-card:nth-child(3) .idea-number{
+    color:#e88799;
+}
+
+.idea-card:nth-child(3) .card-orb{
+    background:rgba(255,113,132,.09);
+    box-shadow:
+        0 0 50px rgba(255,113,132,.09);
 }
 
 
